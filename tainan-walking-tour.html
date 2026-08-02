@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>府城行走｜官署建築巡禮</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap');
+
+:root{
+  --paper: #E9DFC7;
+  --paper-light: #F3ECDB;
+  --paper-dark: #DCD0AE;
+  --ink: #2B2419;
+  --ink-soft: #5A5040;
+  --navy: #24344A;
+  --navy-light: #3A4F6B;
+  --seal: #A13425;
+  --brass: #8E7530;
+  --locked: #A79D84;
+  --line: #C7BB98;
+  --ok: #4C7A4A;
+}
+*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body{
+  margin: 0; background: var(--paper);
+  background-image: radial-gradient(circle at 20% 10%, rgba(0,0,0,0.03), transparent 40%),
+                     radial-gradient(circle at 80% 60%, rgba(0,0,0,0.025), transparent 45%);
+  color: var(--ink); font-family: 'Noto Serif TC', serif; min-height: 100vh;
+}
+.wrap{ max-width: 560px; margin: 0 auto; padding: 0 0 80px; }
+@media (min-width: 700px){ .wrap{ max-width: 640px; } }
+
+header{ padding: 44px 24px 28px; text-align: center; border-bottom: 1px solid var(--line); }
+.eyebrow{ font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; letter-spacing: 0.35em; color: var(--brass); margin-bottom: 10px; }
+h1{ font-size: clamp(26px, 6vw, 32px); font-weight: 900; margin: 0 0 8px; letter-spacing: 0.06em; color: var(--navy); }
+.sub{ font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; color: var(--ink-soft); line-height: 1.7; }
+.progress-bar{ margin: 22px auto 0; max-width: 320px; height: 4px; background: var(--paper-dark); border-radius: 2px; overflow: hidden; }
+.progress-fill{ height: 100%; background: var(--seal); transition: width 0.6s ease; }
+.progress-label{ font-family: 'Noto Sans TC', sans-serif; font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; letter-spacing: 0.05em; }
+
+.stages{ padding: 28px 20px 0; }
+.card{ position: relative; background: var(--paper-light); border: 1px solid var(--line); border-radius: 2px; margin-bottom: 18px; padding: 22px 22px 24px; box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+.card.locked{ background: repeating-linear-gradient(135deg, var(--paper-dark), var(--paper-dark) 10px, var(--paper) 10px, var(--paper) 20px); color: var(--locked); }
+.card-top{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.code{ font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11px; letter-spacing: 0.15em; color: var(--brass); }
+.card.locked .code{ color: var(--locked); }
+.stamp{ width: 52px; height: 52px; border: 2px solid var(--seal); border-radius: 50%; color: var(--seal); display: flex; align-items: center; justify-content: center; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; transform: rotate(-12deg); flex-shrink: 0; opacity: 0.92; }
+.lock-icon{ width: 40px; height: 40px; border: 1.5px dashed var(--locked); border-radius: 50%; display:flex; align-items:center; justify-content:center; color: var(--locked); font-size: 16px; flex-shrink: 0; }
+.card h2{ font-size: clamp(18px,4.5vw,21px); margin: 0 0 6px; color: var(--navy); letter-spacing: 0.02em; }
+.card.locked h2{ color: var(--locked); }
+.card h3{ font-family: 'Noto Sans TC', sans-serif; font-weight: 500; font-size: 13px; margin: 0 0 12px; color: var(--brass); }
+.card.locked h3{ color: var(--locked); }
+.story{ font-family: 'Noto Sans TC', sans-serif; font-size: 14.5px; line-height: 1.95; color: var(--ink); margin: 0 0 12px; }
+.locked-msg{ font-family: 'Noto Sans TC', sans-serif; font-size: 13px; letter-spacing: 0.05em; }
+
+.puzzle{ border-top: 1px dashed var(--line); padding-top: 16px; margin-top: 10px; }
+.puzzle-label{ font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11.5px; color: var(--seal); letter-spacing: 0.1em; margin-bottom: 8px; }
+.puzzle-prompt{ font-family: 'Noto Sans TC', sans-serif; font-size: 14px; line-height: 1.8; margin: 0 0 12px; }
+.puzzle-btn{ padding: 10px 20px; background: var(--navy); color: var(--paper-light); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.05em; }
+.puzzle-feedback{ font-family: 'Noto Sans TC', sans-serif; font-size: 13px; margin-top: 10px; min-height: 18px; }
+.puzzle-feedback.ok{ color: var(--ok); font-weight: 700; }
+.puzzle-feedback.bad{ color: var(--seal); font-weight: 700; }
+.cleared-banner{ display: flex; align-items: center; gap: 14px; border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 16px; animation: clearedPop 0.4s ease; }
+.cleared-stamp{ width: 58px; height: 58px; flex-shrink: 0; border: 3px double var(--ok); border-radius: 50%; color: var(--ok); display:flex; align-items:center; justify-content:center; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px; font-weight: 700; transform: rotate(-10deg); }
+.cleared-text{ font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 700; color: var(--ok); line-height: 1.5; }
+.cleared-text small{ display:block; font-weight: 500; color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+@keyframes clearedPop{ from{ opacity:0; transform: translateY(6px); } to{ opacity:1; transform: translateY(0); } }
+.wrong-banner{ display: flex; align-items: center; gap: 14px; border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 16px; animation: clearedPop 0.4s ease; }
+.wrong-stamp{ width: 58px; height: 58px; flex-shrink: 0; border: 3px double var(--seal); border-radius: 50%; color: var(--seal); display:flex; align-items:center; justify-content:center; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 22px; font-weight: 700; transform: rotate(8deg); }
+.wrong-text{ font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--seal); line-height: 1.7; }
+.fill-input{ width: 100%; font-family: 'Noto Sans TC', sans-serif; font-size: 15px; padding: 10px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 2px; margin-bottom: 10px; }
+.choice-list{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.choice-opt{ text-align: left; padding: 11px 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; border-radius: 2px; }
+.choice-opt.correct{ border-color: var(--ok); background: #E4EEE0; color: var(--ok); }
+.choice-opt.wrong{ border-color: var(--seal); background: #F3E1DC; color: var(--seal); }
+@media (min-width: 700px){ .choice-list{ flex-direction: row; flex-wrap: wrap; } .choice-opt{ flex: 1 1 45%; } }
+.order-pool{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.order-chip{ padding: 9px 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; border-radius: 2px; }
+.order-chip:disabled{ opacity: 0.3; }
+.order-answer{ display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; padding: 8px; border: 1px dashed var(--line); margin-bottom: 10px; font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; align-items: center; }
+.order-answer span{ padding: 5px 10px; background: var(--navy); color: var(--paper-light); border-radius: 2px; }
+.jigsaw-grid{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; width: 100%; max-width: 260px; aspect-ratio: 1; margin: 0 0 12px; border: 1px solid var(--line); padding: 3px; background: var(--paper); }
+.jigsaw-tile{ background-color: var(--navy-light); background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; color: var(--paper-light); font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 22px; font-weight: 700; cursor: pointer; user-select: none; }
+.jigsaw-tile.selected{ outline: 3px solid var(--seal); outline-offset: -3px; }
+.swipe-area{ position: relative; height: 130px; margin-bottom: 10px; }
+.swipe-side-label{ position: absolute; top: 50%; transform: translateY(-50%); font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: var(--ink-soft); width: 68px; }
+.swipe-side-label.left{ left: 0; text-align: left; }
+.swipe-side-label.right{ right: 0; text-align: right; }
+.swipe-card{ position: absolute; left: 74px; right: 74px; top: 0; bottom: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 2px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px; font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; cursor: grab; touch-action: none; }
+@media (min-width: 700px){ .swipe-side-label{ width: 100px; font-size: 13px; } .swipe-card{ left: 108px; right: 108px; } }
+
+.admin-link{ text-align: center; padding: 24px 0 0; }
+.admin-link a{ font-family: 'Noto Sans TC', sans-serif; font-size: 11.5px; color: var(--ink-soft); opacity: 0.55; text-decoration: none; letter-spacing: 0.1em; }
+
+.admin-wrap{ max-width: 560px; margin: 0 auto; padding: 40px 20px 80px; }
+@media (min-width: 700px){ .admin-wrap{ max-width: 700px; } }
+.admin-box{ background: var(--paper-light); border: 1px solid var(--line); padding: 24px 22px; border-radius: 2px; }
+.admin-box h2{ color: var(--navy); font-size: 20px; margin: 0 0 4px; }
+.admin-box p.small{ font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; color: var(--ink-soft); margin: 0 0 18px; }
+input[type=password], input[type=text], textarea, select{
+  width: 100%; font-family: 'Noto Sans TC', sans-serif; font-size: 14.5px; padding: 10px 12px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 2px; margin-bottom: 4px;
+}
+textarea{ resize: vertical; min-height: 52px; font-family: 'Noto Sans TC', sans-serif; }
+.field-label{ font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; color: var(--ink-soft); margin: 14px 0 4px; font-weight: 600; }
+.field-counter{ font-family: 'Noto Sans TC', sans-serif; font-size: 10.5px; color: var(--locked); text-align: right; margin-bottom: 8px; }
+.field-counter.warn{ color: var(--seal); }
+button{ font-family: 'Noto Sans TC', sans-serif; font-size: 14px; border: none; cursor: pointer; border-radius: 2px; transition: opacity 0.2s; }
+button:hover{ opacity: 0.85; }
+.btn-primary{ width: 100%; padding: 13px; background: var(--navy); color: var(--paper-light); font-weight: 600; letter-spacing: 0.05em; }
+.btn-save{ padding: 12px 22px; background: var(--seal); color: var(--paper-light); font-weight: 700; letter-spacing: 0.05em; margin-top: 18px; }
+.tab-bar{ display: flex; gap: 8px; margin-bottom: 18px; }
+.tab-btn{ flex: 1; padding: 11px; background: var(--paper-dark); color: var(--ink-soft); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; }
+.tab-btn.active{ background: var(--navy); color: var(--paper-light); }
+.stage-control{ display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-family: 'Noto Sans TC', sans-serif; font-size: 14px; }
+.stage-control:last-child{ border-bottom: none; }
+.stage-control .lbl{ color: var(--ink); }
+.stage-control .lbl.active{ color: var(--seal); font-weight: 700; }
+.toggle-btn{ padding: 6px 16px; font-size: 12.5px; background: var(--paper-dark); color: var(--ink-soft); }
+.toggle-btn.on{ background: var(--seal); color: var(--paper-light); }
+.quick-row{ display:flex; gap: 10px; margin-top: 18px; }
+.quick-row button{ flex:1; padding: 10px; background: var(--paper-dark); color: var(--ink); font-size: 12.5px; }
+.status-line{ font-family: 'Noto Sans TC', sans-serif; font-size: 11.5px; color: var(--ink-soft); text-align: center; margin-top: 18px; }
+.err{ font-family: 'Noto Sans TC', sans-serif; color: var(--seal); font-size: 12.5px; margin: -6px 0 12px; }
+.saved-msg{ font-family: 'Noto Sans TC', sans-serif; color: var(--ok); font-size: 12.5px; margin-top: 10px; font-weight: 700; }
+.stage-select-row{ display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 6px; align-items: center; }
+.stage-select-btn{ flex-shrink: 0; padding: 8px 14px; background: var(--paper-dark); color: var(--ink-soft); font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; white-space: nowrap; }
+.stage-select-btn.active{ background: var(--seal); color: var(--paper-light); }
+.add-stage-btn{ flex-shrink: 0; padding: 8px 14px; background: var(--navy); color: var(--paper-light); font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; white-space: nowrap; }
+.block-card{ border: 1px dashed var(--line); padding: 12px; margin-top: 10px; border-radius: 2px; position: relative; }
+.block-card-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 6px; }
+.block-card-head .idx{ font-family:'Zen Kaku Gothic New', sans-serif; font-size: 11px; color: var(--brass); letter-spacing:0.08em; }
+.remove-btn{ background: none; color: var(--seal); font-size: 12px; padding: 3px 8px; border: 1px solid var(--seal); }
+.add-block-btn{ margin-top: 10px; padding: 9px 16px; background: var(--paper-dark); color: var(--navy); font-size: 12.5px; font-weight: 600; }
+.section-title{ font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 700; color: var(--navy); margin: 24px 0 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+.delete-stage-row{ margin-top: 20px; text-align: right; }
+.delete-stage-btn{ background: none; color: var(--seal); font-size: 12px; padding: 6px 12px; border: 1px solid var(--seal); }
+
+/* ---------- Stage menu (participant) ---------- */
+.menu-list{ padding: 24px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+.menu-item{
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--paper-light); border: 1px solid var(--line); border-radius: 2px;
+  padding: 16px 16px; width: 100%;
+}
+.menu-item.locked{ background: repeating-linear-gradient(135deg, var(--paper-dark), var(--paper-dark) 10px, var(--paper) 10px, var(--paper) 20px); cursor: not-allowed; }
+.menu-item-code{ font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 11px; color: var(--brass); letter-spacing: 0.1em; flex-shrink: 0; width: 46px; }
+.menu-item.locked .menu-item-code{ color: var(--locked); }
+.menu-item-title{ flex: 1; font-family: 'Noto Serif TC', serif; font-size: 15.5px; font-weight: 700; color: var(--navy); }
+.menu-item.locked .menu-item-title{ color: var(--locked); }
+.menu-item-status{ font-size: 18px; flex-shrink: 0; }
+
+/* ---------- Stage page (participant, paged view) ---------- */
+.stage-page-header{ display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; }
+.back-menu-btn{ background: none; color: var(--ink-soft); font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; padding: 6px 4px; }
+.page-tabs{ display: flex; justify-content: center; gap: 22px; padding: 14px 20px 0; }
+.page-tab{ font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: var(--locked); letter-spacing: 0.08em; padding-bottom: 8px; border-bottom: 2px solid transparent; }
+.page-tab.active{ color: var(--seal); font-weight: 700; border-bottom-color: var(--seal); }
+.stage-page-header .code{ font-size: 11px; }
+.stage-nav{ display: flex; justify-content: space-between; align-items: center; padding: 4px 20px 0; }
+.nav-btn{ padding: 12px 22px; font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: 0.05em; }
+.nav-prev{ background: var(--paper-dark); color: var(--ink-soft); }
+.nav-next{ background: var(--seal); color: var(--paper-light); }
+.nav-next:disabled{ background: var(--paper-dark); color: var(--locked); cursor: not-allowed; }
+.completion-badge{ font-size: 40px; text-align: center; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<div id="app"></div>
+
+<script>
+/* ===================== Data model =====================
+Stage: { id, code, title, sub, texts: [string...150 each], puzzles: [ {type, data}, ... ] }
+======================================================= */
+let idSeq = 1000;
+function genId(prefix){ idSeq++; return prefix + "-" + idSeq; }
+
+const DEFAULT_STAGES = [
+  { id:"s0", code:"序　文", title:"湯德章紀念公園", sub:"一個圓環，府城的心臟地帶",
+    texts:[
+      "腳下這座圓環，日治時期是市街改正計畫的核心。",
+      "四面延伸出去的道路，串起消防、行政、議會、治安幾座建築，像心臟牽動整座城市的日常運作。"
+    ], puzzles:[], wrongTexts:[],
+    completionTexts:["接下來，我們要一站一站走過去，看看不同建築在當年各自扮演的角色。"] },
+  { id:"s1", code:"第一站", title:"合同廳舍", sub:"一座望向全城的高塔",
+    texts:[
+      "沒有電話的年代，值班人員得登高遠望，一發現異狀立刻搖鈴示警。",
+      "這座樓後來也成為警消單位共同辦公的地方，一棟建築，守著兩種任務。"
+    ], puzzles:[
+      { type:"fill", data:{ prompt:"這座高塔沒有電話可用，只能靠人力登高遠望監看火警，因此被稱為「＿火樓」，請填入缺的那個字。", answer:"望" } }
+    ],
+    wrongTexts:["再想想看，這座塔的別名藏著答案的線索喔！"],
+    completionTexts:["沒錯，就是「望」！這座望火樓在沒有電話的年代，是府城最早期、也最直接的城市安全防線。"] },
+  { id:"s2", code:"第二站", title:"台南州廳", sub:"一棟建築見證的行政變化",
+    texts:[
+      "這棟建築曾是全台南最高的行政機關，見證了地方制度從「廳」改為「州」的轉變。",
+      "行政人員經常需要下鄉核對戶籍，一份份名簿記錄著尋常人家的生活點滴。"
+    ], puzzles:[
+      { type:"choice", data:{ question:"台南州廳的行政人員，除了辦公之外，經常需要下鄉做什麼工作？",
+        options:["核對戶籍調查","販賣農產品","訓練軍隊","建造橋樑"], correctIndex:0 } }
+    ],
+    wrongTexts:["再選一次，想想看行政人員的日常工作內容。"],
+    completionTexts:["答對了！戶口調查正是當年基層治理最重要的日常工作，一份份名簿記錄著整座城市的人口流動。"] },
+  { id:"s3", code:"第三站", title:"台南州會", sub:"一座天橋連起的兩棟樓",
+    texts:[
+      "州廳與這棟建築之間有一座相連的天橋。",
+      "這裡曾是地方議會，議員一半官派、一半民選，是地方自治很早期的一次嘗試。"
+    ], puzzles:[
+      { type:"order", data:{ instruction:"請按時間先後，點選建立這棟建築身分轉變的過程。",
+        items:["台南州廳","空軍供應司令部","台南市政府","國立台灣文學館"] } }
+    ],
+    wrongTexts:["順序不太對，再想想這棟建築身分轉變的時間先後。"],
+    completionTexts:["順序正確！這棟建築的身分轉變，也正好呼應了台南從日治到戰後的城市發展軌跡。"] },
+  { id:"s4", code:"第四站", title:"台南警察署（南美館）", sub:"一棟樓的日常百態",
+    texts:[
+      "這棟建築在1931年落成，曾是全台南治安體系的核心。",
+      "值班的日常、同僚間的閒聊，構成了這裡最真實的樣貌。"
+    ], puzzles:[
+      { type:"jigsaw", data:{ instruction:"老照片被打散了，動動手指把它拼回原本的樣子吧（點兩塊交換位置）。", imageUrl:"" } }
+    ],
+    wrongTexts:["拼圖還沒對齊，再交換看看拼塊的位置吧。"],
+    completionTexts:["拼圖完成！這棟建築見證了整個治安體系的日常運作，也留下了許多值得細看的歷史痕跡。"] },
+  { id:"s5", code:"第五站", title:"武德殿", sub:"道場裡的吆喝聲",
+    texts:[
+      "想像這座道場裡，學生與警察一起練柔道、劍道的畫面。",
+      "教官的口令、學員的汗水，是那個年代對紀律的重視。"
+    ], puzzles:[
+      { type:"swipe", data:{ instruction:"當年武德殿是警察和學生共用的訓練場地，對嗎？", leftLabel:"不對", rightLabel:"沒錯", correctDirection:"right" } }
+    ],
+    wrongTexts:["再想一次，武德殿當年真的是警察和學生共用的訓練場地嗎？"],
+    completionTexts:["答對了！武德殿當年確實是警察與學生共用的訓練場地，紀律精神就是在這裡養成的。"] },
+  { id:"s6", code:"結　語", title:"回到公園", sub:"走過一圈，看見一座城市的樣子",
+    texts:[
+      "消防、行政、議會、治安、教育——這幾種城市機能原本各自運作。",
+      "卻共同撐起了府城居民的日常生活，也留下了今天的樣貌。"
+    ], puzzles:[], wrongTexts:[],
+    completionTexts:["謝謝你走完這趟府城巡禮，希望這幾棟老建築，從此在你眼中有了不一樣的故事。"] }
+];
+
+const ADMIN_PASSWORD = "1030";
+const MAXLEN = 150;
+
+/* ⚠️ 請把下面這一整段換成你自己 Firebase 專案的設定值（步驟見說明文件） */
+const firebaseConfig = {
+  apiKey: "AIzaSyC7nJAvloLfcUyGLh9W86T3JoO5Q5SQfeE",
+  authDomain: "tawnan-history-walk.firebaseapp.com",
+  databaseURL: "https://tawnan-history-walk-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tawnan-history-walk",
+  storageBucket: "tawnan-history-walk.firebasestorage.app",
+  messagingSenderId: "53324707965",
+  appId: "1:53324707965:web:de2bfeca76507973f79914"
+};
+const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
+let db = null;
+if(!FIREBASE_NOT_CONFIGURED){
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+}
+
+let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
+let unlockedStages = {}; // { stageId: true }
+
+async function saveContent(){
+  try{ await db.ref("content").set(STAGES); }
+  catch(e){ console.error("Firebase error:", e); alert("儲存失敗，請確認網路連線或 Firebase 設定是否正確"); }
+}
+function isStageUnlocked(sIdx){
+  const s = STAGES[sIdx];
+  return !!(s && unlockedStages[s.id]);
+}
+async function setStageUnlocked(stageId, val){
+  if(val){ unlockedStages[stageId] = true; } else { delete unlockedStages[stageId]; }
+  try{ await db.ref("unlockedStages/"+stageId).set(val ? true : null); }
+  catch(e){ console.error("Firebase error:", e); alert("同步失敗，請確認網路連線或 Firebase 設定是否正確"); }
+}
+
+function esc(s){ return String(s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ===================== Stage-cleared tracking (per browser, local only) ===================== */
+let clearedState = {}; // { stageIdx: Set(puzzleIdx solved) }
+let viewState = { mode: "menu", stageIdx: 0, page: 0 }; // mode: 'menu' | 'stage'
+
+function getPageTypes(stage){
+  return (stage.puzzles||[]).length > 0 ? ["dialogue","interactive","completion"] : ["dialogue","completion"];
+}
+function isStageCleared(sIdx){
+  const s = STAGES[sIdx];
+  if(!s) return false;
+  const puzzles = s.puzzles||[];
+  if(puzzles.length === 0) return true; // no puzzle to solve, nothing blocking "cleared"
+  const set = clearedState[sIdx];
+  return !!set && set.size === puzzles.length;
+}
+function clearedBannerHTML(sIdx){
+  return `
+    <div class="cleared-banner">
+      <div class="cleared-stamp">通關</div>
+      <div class="cleared-text">🎉 已破第 ${sIdx+1} 關！<small>按下方「答題」按鈕即可過關</small></div>
+    </div>`;
+}
+function wrongBannerHTML(sIdx){
+  const s = STAGES[sIdx];
+  const texts = (s.wrongTexts||[]).filter(t=>t && t.trim()!=="");
+  const msg = texts.length ? texts.map(t=>esc(t)).join("<br>") : "答錯了，再想想看！";
+  return `
+    <div class="wrong-banner">
+      <div class="wrong-stamp">✕</div>
+      <div class="wrong-text">${msg}</div>
+    </div>`;
+}
+function markPuzzleSolved(sIdx, pIdx){
+  if(!clearedState[sIdx]) clearedState[sIdx] = new Set();
+  clearedState[sIdx].add(pIdx);
+  const slot = document.getElementById(`cleared-slot-${sIdx}`);
+  if(slot) slot.innerHTML = isStageCleared(sIdx) ? clearedBannerHTML(sIdx) : "";
+  // 若目前正好停留在這一站的互動頁，同步更新下一步按鈕的可按狀態
+  if(viewState.mode === "stage" && viewState.stageIdx === sIdx){
+    const pageTypes = getPageTypes(STAGES[sIdx]);
+    if(pageTypes[viewState.page] === "interactive"){
+      const navSlot = document.getElementById("stage-nav-slot");
+      if(navSlot){
+        navSlot.innerHTML = pageNavButtonsHTML(sIdx, viewState.page, pageTypes);
+        attachStageNavEvents(sIdx, viewState.page, pageTypes);
+      }
+    }
+  }
+}
+
+/* ===================== Puzzle rendering (participant) ===================== */
+function renderPuzzleHTML(pz, sIdx, pIdx){
+  const p = pz.data || {};
+  const key = `${sIdx}-${pIdx}`;
+  switch(pz.type){
+    case "fill":
+      return `
+        <div class="puzzle">
+          <div class="puzzle-label">✏️ 填字挑戰</div>
+          <p class="puzzle-prompt">${esc(p.prompt)}</p>
+          <input type="text" class="fill-input" id="fill-in-${key}" placeholder="輸入答案" maxlength="150">
+          <button class="puzzle-btn" id="fill-btn-${key}">送出</button>
+          <div class="puzzle-feedback" id="fill-fb-${key}"></div>
+        </div>`;
+    case "choice":
+      const opts = (p.options||[]).filter(o=>o && o.trim()!=="");
+      return `
+        <div class="puzzle">
+          <div class="puzzle-label">☑️ 選擇題</div>
+          <p class="puzzle-prompt">${esc(p.question)}</p>
+          <div class="choice-list" id="choice-list-${key}">
+            ${opts.map((o,i)=>`<button class="choice-opt" data-i="${i}">${esc(o)}</button>`).join("")}
+          </div>
+          <div class="puzzle-feedback" id="choice-fb-${key}"></div>
+        </div>`;
+    case "order":
+      const items = (p.items||[]).filter(o=>o && o.trim()!=="");
+      const order = shuffle(items.map((t,i)=>({t,i})));
+      return `
+        <div class="puzzle">
+          <div class="puzzle-label">🔢 排序挑戰</div>
+          <p class="puzzle-prompt">${esc(p.instruction)}</p>
+          <div class="order-answer" id="order-answer-${key}"></div>
+          <div class="order-pool" id="order-pool-${key}">
+            ${order.map(o=>`<button class="order-chip" data-val="${esc(o.t)}">${esc(o.t)}</button>`).join("")}
+          </div>
+          <button class="puzzle-btn" id="order-reset-${key}" style="background:var(--paper-dark);color:var(--ink-soft);">重來</button>
+          <div class="puzzle-feedback" id="order-fb-${key}"></div>
+        </div>`;
+    case "jigsaw":
+      return `
+        <div class="puzzle">
+          <div class="puzzle-label">🧩 簡易拼圖</div>
+          <p class="puzzle-prompt">${esc(p.instruction)}</p>
+          <div class="jigsaw-grid" id="jigsaw-${key}"></div>
+          <div class="puzzle-feedback" id="jigsaw-fb-${key}"></div>
+        </div>`;
+    case "swipe":
+      return `
+        <div class="puzzle">
+          <div class="puzzle-label">👉 滑動挑戰</div>
+          <p class="puzzle-prompt">${esc(p.instruction)}</p>
+          <div class="swipe-area">
+            <div class="swipe-side-label left">⬅ ${esc(p.leftLabel)}</div>
+            <div class="swipe-side-label right">${esc(p.rightLabel)} ➡</div>
+            <div class="swipe-card" id="swipe-card-${key}">向左或向右滑動這張卡片</div>
+          </div>
+          <div class="puzzle-feedback" id="swipe-fb-${key}"></div>
+        </div>`;
+    default: return "";
+  }
+}
+
+function attachPuzzleLogic(pz, sIdx, pIdx){
+  const p = pz.data || {};
+  const key = `${sIdx}-${pIdx}`;
+  if(pz.type === "fill"){
+    const btn = document.getElementById(`fill-btn-${key}`);
+    if(!btn) return;
+    btn.onclick = () => {
+      const val = document.getElementById(`fill-in-${key}`).value.trim();
+      const fb = document.getElementById(`fill-fb-${key}`);
+      if(val === String(p.answer||"").trim()){ fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
+      else{ fb.textContent = "❌ 再想想看"; fb.className = "puzzle-feedback bad"; }
+    };
+  }
+  if(pz.type === "choice"){
+    const list = document.getElementById(`choice-list-${key}`);
+    if(!list) return;
+    list.querySelectorAll(".choice-opt").forEach(btn=>{
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.i,10);
+        const fb = document.getElementById(`choice-fb-${key}`);
+        list.querySelectorAll(".choice-opt").forEach(b=>b.classList.remove("correct","wrong"));
+        if(i === p.correctIndex){ btn.classList.add("correct"); fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
+        else{ btn.classList.add("wrong"); fb.textContent = "❌ 再選一次看看"; fb.className = "puzzle-feedback bad"; }
+      };
+    });
+  }
+  if(pz.type === "order"){
+    const pool = document.getElementById(`order-pool-${key}`);
+    const answer = document.getElementById(`order-answer-${key}`);
+    const fb = document.getElementById(`order-fb-${key}`);
+    const resetBtn = document.getElementById(`order-reset-${key}`);
+    if(!pool) return;
+    const correct = (p.items||[]).filter(o=>o && o.trim()!=="");
+    let picked = [];
+    function renderAnswer(){ answer.innerHTML = picked.map(t=>`<span>${esc(t)}</span>`).join(""); }
+    function checkDone(){
+      if(picked.length === correct.length){
+        const isCorrect = picked.every((v,i)=>v===correct[i]);
+        if(isCorrect){ fb.textContent = "✅ 順序正確！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
+        else{ fb.textContent = "❌ 順序不太對，按重來再試一次"; fb.className = "puzzle-feedback bad"; }
+      }
+    }
+    pool.querySelectorAll(".order-chip").forEach(chip=>{
+      chip.onclick = () => {
+        if(chip.disabled) return;
+        picked.push(chip.dataset.val);
+        chip.disabled = true;
+        renderAnswer(); checkDone();
+      };
+    });
+    resetBtn.onclick = () => {
+      picked = []; renderAnswer();
+      fb.textContent = ""; fb.className = "puzzle-feedback";
+      pool.querySelectorAll(".order-chip").forEach(c=>c.disabled=false);
+    };
+  }
+  if(pz.type === "jigsaw"){
+    const grid = document.getElementById(`jigsaw-${key}`);
+    const fb = document.getElementById(`jigsaw-fb-${key}`);
+    if(!grid) return;
+    const positions = shuffle([0,1,2,3]);
+    let selected = null;
+    const hasImage = p.imageUrl && p.imageUrl.trim() !== "";
+    function coordFor(n){ const col = n % 2, row = Math.floor(n/2); return `${col*100}% ${row*100}%`; }
+    function draw(){
+      grid.innerHTML = "";
+      positions.forEach((origIdx, slot) => {
+        const tile = document.createElement("div");
+        tile.className = "jigsaw-tile";
+        if(hasImage){
+          tile.style.backgroundImage = `url('${p.imageUrl}')`;
+          tile.style.backgroundSize = "200% 200%";
+          tile.style.backgroundPosition = coordFor(origIdx);
+        }else{ tile.textContent = (origIdx+1); }
+        tile.onclick = () => onTileClick(slot);
+        grid.appendChild(tile);
+      });
+    }
+    function onTileClick(slot){
+      const tiles = grid.querySelectorAll(".jigsaw-tile");
+      if(selected === null){ selected = slot; tiles[slot].classList.add("selected"); return; }
+      if(selected === slot){ tiles[slot].classList.remove("selected"); selected = null; return; }
+      const tmp = positions[selected]; positions[selected] = positions[slot]; positions[slot] = tmp;
+      selected = null; draw();
+      if(positions.every((v,i)=>v===i)){ fb.textContent = "✅ 拼對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
+      else{ fb.textContent = ""; fb.className = "puzzle-feedback"; }
+    }
+    draw();
+  }
+  if(pz.type === "swipe"){
+    const card = document.getElementById(`swipe-card-${key}`);
+    const fb = document.getElementById(`swipe-fb-${key}`);
+    if(!card) return;
+    let startX = 0, dx = 0, dragging = false;
+    card.addEventListener("pointerdown", e => { dragging = true; startX = e.clientX; card.setPointerCapture(e.pointerId); card.style.transition = "none"; });
+    card.addEventListener("pointermove", e => { if(!dragging) return; dx = e.clientX - startX; card.style.transform = `translateX(${dx}px) rotate(${dx/20}deg)`; });
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      card.style.transition = "transform 0.3s ease";
+      if(Math.abs(dx) > 70){
+        const dir = dx > 0 ? "right" : "left";
+        card.style.transform = `translateX(${dx>0?400:-400}px) rotate(${dx/20}deg)`;
+        setTimeout(()=>{
+          if(dir === p.correctDirection){ fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
+          else{ fb.textContent = "❌ 再試一次"; fb.className = "puzzle-feedback bad"; }
+          card.style.transition = "none"; card.style.transform = "translateX(0) rotate(0)";
+        }, 280);
+      }else{ card.style.transform = "translateX(0) rotate(0)"; }
+      dx = 0;
+    }
+    card.addEventListener("pointerup", endDrag);
+    card.addEventListener("pointercancel", endDrag);
+  }
+}
+
+/* ===================== Participant view: stage menu ===================== */
+function renderStageMenu(){
+  const items = STAGES.map((s,i)=>{
+    const unlocked = isStageUnlocked(i);
+    const cleared = unlocked && isStageCleared(i);
+    const statusIcon = !unlocked ? "🔒" : (cleared ? "✅" : "🔓");
+    const cls = unlocked ? "menu-item" : "menu-item locked";
+    return `
+      <button class="${cls}" ${unlocked ? `data-goto="${i}"` : "disabled"}>
+        <span class="menu-item-code">${esc(s.code)}</span>
+        <span class="menu-item-title">${esc(s.title)}</span>
+        <span class="menu-item-status">${statusIcon}</span>
+      </button>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = `
+    <div class="wrap">
+      <header>
+        <div class="eyebrow">TAINAN COLONIAL BUILDINGS WALK</div>
+        <h1>府城行走</h1>
+        <div class="sub">官署建築巡禮・點選已開放的關卡開始</div>
+      </header>
+      <div class="menu-list">${items}</div>
+      <div class="admin-link"><a href="#admin">主辦者入口</a></div>
+    </div>`;
+
+  document.querySelectorAll("[data-goto]").forEach(btn=>{
+    btn.onclick = () => {
+      viewState = { mode:"stage", stageIdx: parseInt(btn.dataset.goto,10), page: 0 };
+      renderParticipant();
+    };
+  });
+}
+
+/* ===================== Participant view: one stage, paged (對話／互動／完成) ===================== */
+function pageNavButtonsHTML(sIdx, pageIdx, pageTypes){
+  const curType = pageTypes[pageIdx];
+  const left = pageIdx > 0 ? `<button class="nav-btn nav-prev" id="navPrevBtn">← 上一步</button>` : `<span></span>`;
+  let right = "";
+  if(curType === "completion"){
+    const hasNextStage = (sIdx+1) < STAGES.length && isStageUnlocked(sIdx+1);
+    right = hasNextStage
+      ? `<button class="nav-btn nav-next" id="navNextStageBtn">前往下一關 →</button>`
+      : `<button class="nav-btn nav-next" id="navMenuBtn">返回關卡目錄</button>`;
+  }else if(curType === "interactive"){
+    right = `<button class="nav-btn nav-next" id="navAnswerBtn">答題</button>`;
+  }else{
+    right = `<button class="nav-btn nav-next" id="navNextBtn">下一步 →</button>`;
+  }
+  return `<div class="stage-nav">${left}${right}</div>`;
+}
+function attachStageNavEvents(sIdx, pageIdx, pageTypes){
+  const prevBtn = document.getElementById("navPrevBtn");
+  const nextBtn = document.getElementById("navNextBtn");
+  const answerBtn = document.getElementById("navAnswerBtn");
+  const nextStageBtn = document.getElementById("navNextStageBtn");
+  const menuBtn = document.getElementById("navMenuBtn");
+  if(prevBtn) prevBtn.onclick = () => { viewState.page = pageIdx-1; renderParticipant(); };
+  if(nextBtn) nextBtn.onclick = () => { viewState.page = pageIdx+1; renderParticipant(); };
+  if(answerBtn) answerBtn.onclick = () => {
+    if(isStageCleared(sIdx)){
+      viewState.page = pageIdx+1; // 前往完成頁
+      renderParticipant();
+    }else{
+      const slot = document.getElementById(`cleared-slot-${sIdx}`);
+      if(slot) slot.innerHTML = wrongBannerHTML(sIdx);
+    }
+  };
+  if(nextStageBtn) nextStageBtn.onclick = () => { viewState = { mode:"stage", stageIdx: sIdx+1, page: 0 }; renderParticipant(); };
+  if(menuBtn) menuBtn.onclick = () => { viewState = { mode:"menu" }; renderParticipant(); };
+}
+
+function renderStagePage(){
+  const sIdx = viewState.stageIdx;
+  const s = STAGES[sIdx];
+  const pageTypes = getPageTypes(s);
+  if(viewState.page >= pageTypes.length) viewState.page = pageTypes.length-1;
+  const curType = pageTypes[viewState.page];
+  const labels = { dialogue:"對話", interactive:"互動", completion:"完成" };
+
+  const tabsHtml = pageTypes.map((t,i)=>`<span class="page-tab ${i===viewState.page?'active':''}">${labels[t]}</span>`).join("");
+
+  let bodyHtml = "";
+  if(curType === "dialogue"){
+    const texts = (s.texts||[]).filter(t=>t && t.trim()!=="");
+    bodyHtml = `
+      <h2>${esc(s.title)}</h2><h3>${esc(s.sub)}</h3>
+      ${texts.map(t=>`<p class="story">${esc(t)}</p>`).join("")}`;
+  }else if(curType === "interactive"){
+    const puzzlesHtml = (s.puzzles||[]).map((pz,pIdx)=>renderPuzzleHTML(pz,sIdx,pIdx)).join("");
+    bodyHtml = `
+      <h2>${esc(s.title)}</h2><h3>互動挑戰</h3>
+      ${puzzlesHtml}
+      <div class="cleared-slot" id="cleared-slot-${sIdx}">${isStageCleared(sIdx)?clearedBannerHTML(sIdx):""}</div>`;
+  }else{
+    const ctexts = (s.completionTexts||[]).filter(t=>t && t.trim()!=="");
+    bodyHtml = `
+      <div class="completion-badge">🎉</div>
+      <h2 style="text-align:center;">恭喜答對！</h2>
+      ${ctexts.map(t=>`<p class="story">${esc(t)}</p>`).join("")}`;
+  }
+
+  document.getElementById("app").innerHTML = `
+    <div class="wrap">
+      <div class="stage-page-header">
+        <button class="back-menu-btn" id="backMenuBtn">← 關卡目錄</button>
+        <span class="code">${esc(s.code)}</span>
+      </div>
+      <div class="page-tabs">${tabsHtml}</div>
+      <div class="stages"><div class="card">${bodyHtml}</div></div>
+      <div id="stage-nav-slot">${pageNavButtonsHTML(sIdx, viewState.page, pageTypes)}</div>
+    </div>`;
+
+  document.getElementById("backMenuBtn").onclick = () => { viewState = { mode:"menu" }; renderParticipant(); };
+  attachStageNavEvents(sIdx, viewState.page, pageTypes);
+  if(curType === "interactive"){ (s.puzzles||[]).forEach((pz,pIdx)=>attachPuzzleLogic(pz,sIdx,pIdx)); }
+}
+
+/* ===================== Participant view: dispatcher ===================== */
+function renderParticipant(){
+  if(viewState.mode === "stage" && !isStageUnlocked(viewState.stageIdx)){
+    // 保護機制：如果主辦者把這一關重新鎖回去，強制退回關卡目錄
+    viewState = { mode: "menu" };
+  }
+  if(viewState.mode === "stage"){ renderStagePage(); }
+  else{ renderStageMenu(); }
+}
+
+/* ===================== Admin: login ===================== */
+function renderAdminLogin(errMsg){
+  document.getElementById("app").innerHTML = `
+    <div class="admin-wrap">
+      <div class="admin-box">
+        <h2>現場控制台</h2>
+        <p class="small">輸入密碼以管理解鎖進度與內容</p>
+        ${errMsg ? `<div class="err">${errMsg}</div>` : ""}
+        <input type="password" id="pwInput" placeholder="請輸入密碼">
+        <button class="btn-primary" id="loginBtn">登入</button>
+      </div>
+      <div class="admin-link" style="margin-top:16px;"><a href="#">回到參加者畫面</a></div>
+    </div>`;
+  document.getElementById("loginBtn").onclick = () => {
+    const val = document.getElementById("pwInput").value;
+    if(val === ADMIN_PASSWORD){ sessionStorage.setItem("tour-admin-auth","1"); handleHashChange(); }
+    else{ renderAdminLogin("密碼錯誤，請再試一次"); }
+  };
+  document.getElementById("pwInput").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("loginBtn").click(); });
+}
+
+/* ===================== Admin: unlock tab ===================== */
+function unlockTabHTML(){
+  const rows = STAGES.map((s,i)=>{
+    const on = isStageUnlocked(i);
+    return `
+    <div class="stage-control">
+      <span class="lbl ${on?'active':''}">${esc(s.code)}．${esc(s.title)}</span>
+      <button class="toggle-btn ${on?'on':''}" data-id="${s.id}">${on?'已開放':'已鎖定'}</button>
+    </div>`;
+  }).join("");
+  return `
+    <p class="small">每一關都能獨立開關，不需要照順序，點一下切換該站的開放狀態</p>
+    ${rows}
+    <div class="quick-row"><button id="resetBtn">全部鎖定</button><button id="openAllBtn">全部開放</button></div>`;
+}
+function attachUnlockTabEvents(rerender){
+  document.querySelectorAll(".toggle-btn").forEach(btn=>{
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const on = !!unlockedStages[id];
+      await setStageUnlocked(id, !on);
+      rerender();
+    };
+  });
+  const resetBtn = document.getElementById("resetBtn");
+  const openAllBtn = document.getElementById("openAllBtn");
+  if(resetBtn) resetBtn.onclick = async () => { for(const s of STAGES){ await setStageUnlocked(s.id, false); } rerender(); };
+  if(openAllBtn) openAllBtn.onclick = async () => { for(const s of STAGES){ await setStageUnlocked(s.id, true); } rerender(); };
+}
+
+/* ===================== Admin: content editor tab ===================== */
+function counterHTML(id, text){
+  const len = (text||"").length;
+  return `<div class="field-counter ${len>=MAXLEN?'warn':''}" id="${id}">${len} / ${MAXLEN}</div>`;
+}
+function attachCounter(inputEl, counterEl){
+  inputEl.addEventListener("input", () => {
+    const len = inputEl.value.length;
+    counterEl.textContent = `${len} / ${MAXLEN}`;
+    counterEl.classList.toggle("warn", len >= MAXLEN);
+  });
+}
+function bindAllCounters(){
+  document.querySelectorAll('input[maxlength], textarea[maxlength]').forEach(el=>{
+    const cEl = document.getElementById(el.id + "-c");
+    if(cEl) attachCounter(el, cEl);
+  });
+}
+
+const PUZZLE_TYPE_LABELS = { fill:"填字詞", choice:"選項", order:"點選排序", jigsaw:"簡易拼圖", swipe:"手指滑動" };
+
+function puzzleFieldsHTML(pz, pIdx){
+  const p = pz.data || {};
+  const type = pz.type;
+  const pre = `pf-${pIdx}`;
+  if(type === "fill"){
+    return `
+      <div class="field-label">題目敘述</div>
+      <textarea maxlength="150" id="${pre}-prompt">${esc(p.prompt)}</textarea>
+      ${counterHTML(pre+"-prompt-c", p.prompt)}
+      <div class="field-label">正確答案</div>
+      <input type="text" maxlength="150" id="${pre}-answer" value="${esc(p.answer)}">
+      ${counterHTML(pre+"-answer-c", p.answer)}`;
+  }
+  if(type === "choice"){
+    const opts = p.options||["","","",""]; while(opts.length<4) opts.push("");
+    return `
+      <div class="field-label">題目</div>
+      <textarea maxlength="150" id="${pre}-question">${esc(p.question)}</textarea>
+      ${counterHTML(pre+"-question-c", p.question)}
+      ${[0,1,2,3].map(i=>`
+        <div class="field-label">選項 ${i+1}</div>
+        <input type="text" maxlength="150" id="${pre}-opt-${i}" value="${esc(opts[i])}">
+      `).join("")}
+      <div class="field-label">正確答案是第幾個選項？</div>
+      <select id="${pre}-correct">
+        ${[0,1,2,3].map(i=>`<option value="${i}" ${p.correctIndex===i?"selected":""}>選項 ${i+1}</option>`).join("")}
+      </select>`;
+  }
+  if(type === "order"){
+    const items = p.items||["","","",""]; while(items.length<4) items.push("");
+    return `
+      <div class="field-label">操作說明</div>
+      <textarea maxlength="150" id="${pre}-instruction">${esc(p.instruction)}</textarea>
+      ${counterHTML(pre+"-instruction-c", p.instruction)}
+      <div class="field-label">正確順序（由上到下依序填寫，第一個先發生）</div>
+      ${[0,1,2,3].map(i=>`<input type="text" maxlength="150" id="${pre}-item-${i}" value="${esc(items[i])}" placeholder="項目 ${i+1}">`).join("")}`;
+  }
+  if(type === "jigsaw"){
+    return `
+      <div class="field-label">操作說明</div>
+      <textarea maxlength="150" id="${pre}-instruction">${esc(p.instruction)}</textarea>
+      ${counterHTML(pre+"-instruction-c", p.instruction)}
+      <div class="field-label">圖片網址（留空則顯示數字拼塊）</div>
+      <input type="text" maxlength="150" id="${pre}-image" value="${esc(p.imageUrl)}" placeholder="https://...">
+      ${counterHTML(pre+"-image-c", p.imageUrl)}`;
+  }
+  if(type === "swipe"){
+    return `
+      <div class="field-label">題目敘述</div>
+      <textarea maxlength="150" id="${pre}-instruction">${esc(p.instruction)}</textarea>
+      ${counterHTML(pre+"-instruction-c", p.instruction)}
+      <div class="field-label">向左滑動代表</div>
+      <input type="text" maxlength="150" id="${pre}-left" value="${esc(p.leftLabel)}">
+      <div class="field-label">向右滑動代表</div>
+      <input type="text" maxlength="150" id="${pre}-right" value="${esc(p.rightLabel)}">
+      <div class="field-label">正確方向</div>
+      <select id="${pre}-dir">
+        <option value="left" ${p.correctDirection==="left"?"selected":""}>向左滑</option>
+        <option value="right" ${p.correctDirection==="right"?"selected":""}>向右滑</option>
+      </select>`;
+  }
+  return "";
+}
+function collectPuzzleDataFromForm(type, pIdx){
+  const pre = `pf-${pIdx}`;
+  const g = id => { const el = document.getElementById(id); return el ? el.value : ""; };
+  if(type === "fill") return { prompt: g(`${pre}-prompt`), answer: g(`${pre}-answer`) };
+  if(type === "choice") return { question: g(`${pre}-question`), options:[0,1,2,3].map(i=>g(`${pre}-opt-${i}`)), correctIndex: parseInt(g(`${pre}-correct`)||"0",10) };
+  if(type === "order") return { instruction: g(`${pre}-instruction`), items:[0,1,2,3].map(i=>g(`${pre}-item-${i}`)) };
+  if(type === "jigsaw") return { instruction: g(`${pre}-instruction`), imageUrl: g(`${pre}-image`) };
+  if(type === "swipe") return { instruction: g(`${pre}-instruction`), leftLabel: g(`${pre}-left`), rightLabel: g(`${pre}-right`), correctDirection: g(`${pre}-dir`)||"left" };
+  return {};
+}
+
+function stageTextsEditorHTML(stage){
+  const texts = stage.texts||[];
+  const blocks = texts.map((t,i)=>`
+    <div class="block-card">
+      <div class="block-card-head"><span class="idx">第 ${i+1} 段</span><button class="remove-btn" data-remove-text="${i}">移除</button></div>
+      <textarea maxlength="150" id="ed-text-${i}">${esc(t)}</textarea>
+      ${counterHTML("ed-text-"+i+"-c", t)}
+    </div>`).join("");
+  return `
+    <div class="section-title">① 對話頁文字（每段最多150字，可自由新增段落）</div>
+    ${blocks}
+    <button class="add-block-btn" id="addTextBtn">＋ 新增一段文字</button>`;
+}
+
+function stageCompletionEditorHTML(stage){
+  const texts = stage.completionTexts||[];
+  const blocks = texts.map((t,i)=>`
+    <div class="block-card">
+      <div class="block-card-head"><span class="idx">第 ${i+1} 段</span><button class="remove-btn" data-remove-completion="${i}">移除</button></div>
+      <textarea maxlength="150" id="ed-completion-${i}">${esc(t)}</textarea>
+      ${counterHTML("ed-completion-"+i+"-c", t)}
+    </div>`).join("");
+  return `
+    <div class="section-title">③ 答對後的完成頁文字（每段最多150字）</div>
+    ${blocks}
+    <button class="add-block-btn" id="addCompletionBtn">＋ 新增一段文字</button>`;
+}
+
+function stageWrongEditorHTML(stage){
+  const texts = stage.wrongTexts||[];
+  const blocks = texts.map((t,i)=>`
+    <div class="block-card">
+      <div class="block-card-head"><span class="idx">第 ${i+1} 段</span><button class="remove-btn" data-remove-wrong="${i}">移除</button></div>
+      <textarea maxlength="150" id="ed-wrong-${i}">${esc(t)}</textarea>
+      ${counterHTML("ed-wrong-"+i+"-c", t)}
+    </div>`).join("");
+  return `
+    <div class="section-title">④ 答錯提示文字（點「答題」但還沒答對時顯示）</div>
+    ${blocks}
+    <button class="add-block-btn" id="addWrongBtn">＋ 新增一段文字</button>`;
+}
+
+function stagePuzzlesEditorHTML(stage){
+  const puzzles = stage.puzzles||[];
+  const blocks = puzzles.map((pz,i)=>`
+    <div class="block-card">
+      <div class="block-card-head"><span class="idx">遊戲 ${i+1}</span><button class="remove-btn" data-remove-puzzle="${i}">移除</button></div>
+      <div class="field-label">遊戲類型</div>
+      <select data-ptype="${i}">
+        ${Object.keys(PUZZLE_TYPE_LABELS).map(t=>`<option value="${t}" ${pz.type===t?"selected":""}>${PUZZLE_TYPE_LABELS[t]}</option>`).join("")}
+      </select>
+      <div data-pfields="${i}">${puzzleFieldsHTML(pz,i)}</div>
+    </div>`).join("");
+  return `
+    <div class="section-title">② 互動頁遊戲（可新增多個，型式：填字詞／選項／點選排序／簡易拼圖／手指滑動）</div>
+    ${blocks}
+    <button class="add-block-btn" id="addPuzzleBtn">＋ 新增一個遊戲</button>`;
+}
+
+function contentTabHTML(selectedIdx){
+  const s = STAGES[selectedIdx];
+  const tabs = STAGES.map((st,i)=>`<button class="stage-select-btn ${i===selectedIdx?'active':''}" data-i="${i}">${esc(st.code)}</button>`).join("");
+  return `
+    <p class="small">每個欄位最多 150 字。這一站會分成三頁給參加者看：①對話 ②互動 ③完成，文字與遊戲皆可自由新增，改完請按「儲存這一站」</p>
+    <div class="stage-select-row">${tabs}<button class="add-stage-btn" id="addStageBtn">＋ 新增關卡</button></div>
+
+    <div class="field-label">站別代碼</div>
+    <input type="text" maxlength="150" id="ed-code" value="${esc(s.code)}">
+    ${counterHTML("ed-code-c", s.code)}
+    <div class="field-label">標題</div>
+    <input type="text" maxlength="150" id="ed-title" value="${esc(s.title)}">
+    ${counterHTML("ed-title-c", s.title)}
+    <div class="field-label">副標</div>
+    <input type="text" maxlength="150" id="ed-sub" value="${esc(s.sub)}">
+    ${counterHTML("ed-sub-c", s.sub)}
+
+    ${stageTextsEditorHTML(s)}
+    ${stagePuzzlesEditorHTML(s)}
+    ${stageWrongEditorHTML(s)}
+    ${stageCompletionEditorHTML(s)}
+
+    <button class="btn-save" id="saveStageBtn">儲存這一站</button>
+    <div id="savedMsg"></div>
+
+    <div class="delete-stage-row">
+      <button class="delete-stage-btn" id="deleteStageBtn" ${STAGES.length<=1?"disabled":""}>🗑 刪除這個關卡</button>
+    </div>`;
+}
+
+/* Pull whatever is currently typed in the form back into STAGES[idx], so
+   add/remove actions never lose unsaved edits. */
+function harvestFormIntoStage(idx){
+  const stage = STAGES[idx];
+  if(!stage) return;
+  const g = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  const code = g("ed-code"); if(code !== null) stage.code = code.slice(0,MAXLEN);
+  const title = g("ed-title"); if(title !== null) stage.title = title.slice(0,MAXLEN);
+  const sub = g("ed-sub"); if(sub !== null) stage.sub = sub.slice(0,MAXLEN);
+
+  (stage.texts||[]).forEach((t,i)=>{
+    const v = g(`ed-text-${i}`);
+    if(v !== null) stage.texts[i] = v.slice(0,MAXLEN);
+  });
+  (stage.completionTexts||[]).forEach((t,i)=>{
+    const v = g(`ed-completion-${i}`);
+    if(v !== null) stage.completionTexts[i] = v.slice(0,MAXLEN);
+  });
+  (stage.wrongTexts||[]).forEach((t,i)=>{
+    const v = g(`ed-wrong-${i}`);
+    if(v !== null) stage.wrongTexts[i] = v.slice(0,MAXLEN);
+  });
+  (stage.puzzles||[]).forEach((pz,i)=>{
+    const typeSel = document.querySelector(`[data-ptype="${i}"]`);
+    if(typeSel){
+      pz.type = typeSel.value;
+      pz.data = collectPuzzleDataFromForm(pz.type, i);
+    }
+  });
+}
+
+function attachContentTabEvents(selectedIdx, rerender){
+  document.querySelectorAll(".stage-select-btn").forEach(btn=>{
+    btn.onclick = () => { harvestFormIntoStage(selectedIdx); rerender(parseInt(btn.dataset.i,10)); };
+  });
+  bindAllCounters();
+
+  document.getElementById("addStageBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    const n = STAGES.length;
+    STAGES.push({ id: genId("stage"), code:`第${n}站`, title:"新關卡", sub:"", texts:[""], puzzles:[], wrongTexts:[""], completionTexts:[""] });
+    await saveContent();
+    rerender(STAGES.length-1);
+  };
+  const deleteBtn = document.getElementById("deleteStageBtn");
+  if(deleteBtn && STAGES.length>1){
+    deleteBtn.onclick = async () => {
+      if(!confirm("確定要刪除這個關卡嗎？此動作無法復原。")) return;
+      STAGES.splice(selectedIdx,1);
+      await saveContent();
+      rerender(Math.max(0, selectedIdx-1));
+    };
+  }
+
+  document.getElementById("addTextBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    STAGES[selectedIdx].texts.push("");
+    await saveContent();
+    rerender(selectedIdx);
+  };
+  document.querySelectorAll("[data-remove-text]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.removeText,10);
+      STAGES[selectedIdx].texts.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+
+  document.getElementById("addCompletionBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    if(!STAGES[selectedIdx].completionTexts) STAGES[selectedIdx].completionTexts = [];
+    STAGES[selectedIdx].completionTexts.push("");
+    await saveContent();
+    rerender(selectedIdx);
+  };
+  document.querySelectorAll("[data-remove-completion]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.removeCompletion,10);
+      STAGES[selectedIdx].completionTexts.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+
+  document.getElementById("addWrongBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    if(!STAGES[selectedIdx].wrongTexts) STAGES[selectedIdx].wrongTexts = [];
+    STAGES[selectedIdx].wrongTexts.push("");
+    await saveContent();
+    rerender(selectedIdx);
+  };
+  document.querySelectorAll("[data-remove-wrong]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.removeWrong,10);
+      STAGES[selectedIdx].wrongTexts.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+
+  document.getElementById("addPuzzleBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    STAGES[selectedIdx].puzzles.push({ type:"fill", data:{ prompt:"", answer:"" } });
+    await saveContent();
+    rerender(selectedIdx);
+  };
+  document.querySelectorAll("[data-remove-puzzle]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.removePuzzle,10);
+      STAGES[selectedIdx].puzzles.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+  document.querySelectorAll("[data-ptype]").forEach(sel=>{
+    sel.onchange = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(sel.dataset.ptype,10);
+      STAGES[selectedIdx].puzzles[i].type = sel.value;
+      STAGES[selectedIdx].puzzles[i].data = {};
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+
+  document.getElementById("saveStageBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    await saveContent();
+    const msg = document.getElementById("savedMsg");
+    msg.innerHTML = `<div class="saved-msg">已儲存這一站的內容</div>`;
+    setTimeout(()=>{ if(msg) msg.innerHTML=""; }, 2500);
+  };
+}
+
+/* ===================== Admin: panel with tabs ===================== */
+let adminTab = "unlock";
+let adminSelectedStage = 0;
+
+async function renderAdminPanel(){
+  if(adminSelectedStage >= STAGES.length) adminSelectedStage = STAGES.length-1;
+  const body = adminTab === "unlock" ? unlockTabHTML() : contentTabHTML(adminSelectedStage);
+
+  document.getElementById("app").innerHTML = `
+    <div class="admin-wrap">
+      <div class="admin-box">
+        <h2>現場控制台</h2>
+        <div class="tab-bar">
+          <button class="tab-btn ${adminTab==='unlock'?'active':''}" id="tabUnlock">解鎖控制</button>
+          <button class="tab-btn ${adminTab==='content'?'active':''}" id="tabContent">內容與謎題編輯</button>
+        </div>
+        <div id="tabBody">${body}</div>
+      </div>
+      <div class="admin-link" style="margin-top:16px;"><a href="#" id="logoutLink">登出並回到參加者畫面</a></div>
+    </div>`;
+
+  document.getElementById("tabUnlock").onclick = () => { adminTab="unlock"; renderAdminPanel(); };
+  document.getElementById("tabContent").onclick = () => { adminTab="content"; renderAdminPanel(); };
+  document.getElementById("logoutLink").onclick = (e) => { e.preventDefault(); sessionStorage.removeItem("tour-admin-auth"); window.location.hash=""; handleHashChange(); };
+
+  if(adminTab === "unlock"){ attachUnlockTabEvents(()=>{ renderAdminPanel(); }); }
+  else{ attachContentTabEvents(adminSelectedStage, (i)=>{ adminSelectedStage=i; renderAdminPanel(); }); }
+}
+
+/* ===================== Firebase real-time sync ===================== */
+function renderSetupNotice(){
+  document.getElementById("app").innerHTML = `
+    <div class="admin-wrap">
+      <div class="admin-box">
+        <h2>尚未設定 Firebase</h2>
+        <p class="small">這個網頁需要連接 Firebase Realtime Database 才能讓解鎖狀態與內容跨裝置同步。請依照說明文件，把你自己的 Firebase 專案設定貼到程式碼裡 firebaseConfig 的位置（搜尋 YOUR_API_KEY），存檔後重新整理即可。</p>
+      </div>
+    </div>`;
+}
+
+function onDataChange(){
+  if(window.location.hash === "#admin"){
+    if(sessionStorage.getItem("tour-admin-auth") === "1"){ renderAdminPanel(); }
+  }else{
+    renderParticipant();
+  }
+}
+
+function handleHashChange(){
+  if(window.location.hash === "#admin"){
+    if(sessionStorage.getItem("tour-admin-auth") === "1"){ renderAdminPanel(); }
+    else{ renderAdminLogin(null); }
+  }else{
+    renderParticipant();
+  }
+}
+
+function initFirebaseListeners(){
+  db.ref("content").on("value", snap => {
+    if(snap.exists()){ STAGES = snap.val(); }
+    else{ STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES)); db.ref("content").set(STAGES); }
+    onDataChange();
+  }, err => { console.error("Firebase read error:", err); });
+
+  db.ref("unlockedStages").on("value", snap => {
+    unlockedStages = snap.exists() ? snap.val() : {};
+    onDataChange();
+  }, err => { console.error("Firebase read error:", err); });
+}
+
+window.addEventListener("hashchange", handleHashChange);
+
+if(FIREBASE_NOT_CONFIGURED){
+  renderSetupNotice();
+}else{
+  handleHashChange(); // 先用本地預設值畫一次，避免空白畫面
+  initFirebaseListeners(); // 資料到位後會自動觸發重新渲染
+}
+</script>
+</body>
+</html>
