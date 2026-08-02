@@ -69,6 +69,7 @@ h1{ font-size: clamp(26px, 6vw, 32px); font-weight: 900; margin: 0 0 8px; letter
 .wrong-banner{ display: flex; align-items: center; gap: 14px; border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 16px; animation: clearedPop 0.4s ease; }
 .wrong-stamp{ width: 58px; height: 58px; flex-shrink: 0; border: 3px double var(--seal); border-radius: 50%; color: var(--seal); display:flex; align-items:center; justify-content:center; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 22px; font-weight: 700; transform: rotate(8deg); }
 .wrong-text{ font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--seal); line-height: 1.7; }
+.solved-answer{ font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 700; color: var(--ok); background: #E4EEE0; padding: 10px 14px; border-radius: 2px; margin-top: 4px; }
 .fill-input{ width: 100%; font-family: 'Noto Sans TC', sans-serif; font-size: 15px; padding: 10px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 2px; margin-bottom: 10px; }
 .choice-list{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
 .choice-opt{ text-align: left; padding: 11px 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; border-radius: 2px; }
@@ -167,11 +168,19 @@ button:hover{ opacity: 0.85; }
 .nav-next{ background: var(--seal); color: var(--paper-light); }
 .nav-next:disabled{ background: var(--paper-dark); color: var(--locked); cursor: not-allowed; }
 .completion-badge{ font-size: 40px; text-align: center; margin-bottom: 4px; }
+.block-image{ width: 100%; border-radius: 2px; margin-bottom: 14px; display: block; border: 1px solid var(--line); }
+.img-upload-row{ margin-top: 10px; }
+.img-upload-row input[type=file]{ font-family: 'Noto Sans TC', sans-serif; font-size: 12.5px; width: 100%; margin-bottom: 6px; }
+.img-preview{ width: 100%; max-width: 220px; border-radius: 2px; border: 1px solid var(--line); margin-top: 6px; display: block; }
+.img-status{ font-family: 'Noto Sans TC', sans-serif; font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+.img-status.uploading{ color: var(--brass); }
+.img-remove-btn{ margin-top: 6px; background: none; color: var(--seal); font-size: 11.5px; padding: 4px 10px; border: 1px solid var(--seal); }
 </style>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <div id="app"></div>
 
 <script>
@@ -253,9 +262,19 @@ const firebaseConfig = {
 };
 const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
 let db = null;
+let storage = null;
 if(!FIREBASE_NOT_CONFIGURED){
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  storage = firebase.storage();
+}
+
+async function uploadImageFile(file, pathHint){
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const path = `images/${pathHint}-${Date.now()}-${safeName}`;
+  const ref = storage.ref().child(path);
+  const snap = await ref.put(file);
+  return await snap.ref.getDownloadURL();
 }
 
 let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
@@ -274,9 +293,16 @@ function normalizeStage(s, idx){
   };
   out.blocks = out.blocks.map(b=>{
     if(b && b.type === "puzzle"){
-      return { type:"puzzle", puzzle: (b.puzzle && b.puzzle.type) ? b.puzzle : { type:"fill", data:{ prompt:"", answer:"" } } };
+      const pz = (b.puzzle && b.puzzle.type) ? b.puzzle : { type:"fill", data:{ prompt:"", answer:"" } };
+      if(!pz.data) pz.data = {};
+      if(typeof pz.data.imageUrl !== "string") pz.data.imageUrl = "";
+      return { type:"puzzle", puzzle: pz };
     }
-    return { type:"dialogue", text: (b && typeof b.text === "string") ? b.text : "" };
+    return {
+      type:"dialogue",
+      text: (b && typeof b.text === "string") ? b.text : "",
+      imageUrl: (b && typeof b.imageUrl === "string") ? b.imageUrl : ""
+    };
   });
   return out;
 }
@@ -313,45 +339,62 @@ function blockClearedBannerHTML(){
   return `
     <div class="cleared-banner">
       <div class="cleared-stamp">✓</div>
-      <div class="cleared-text">✅ 答對了！<small>按下方「答題」按鈕繼續</small></div>
+      <div class="cleared-text">✅ 答對了！<small>可以按下方「下一步」繼續</small></div>
     </div>`;
 }
-function wrongBannerHTML(sIdx){
+/* 取得這一站自訂的答錯提示文字，若沒設定則用預設文字 */
+function getWrongMessage(sIdx, fallback){
   const s = STAGES[sIdx];
   const texts = (s.wrongTexts||[]).filter(t=>t && t.trim()!=="");
-  const msg = texts.length ? texts.map(t=>esc(t)).join("<br>") : "答錯了，再想想看！";
-  return `
-    <div class="wrong-banner">
-      <div class="wrong-stamp">✕</div>
-      <div class="wrong-text">${msg}</div>
-    </div>`;
+  return texts.length ? ("❌ " + texts.join(" ")) : fallback;
 }
 function markPuzzleSolved(sIdx, bIdx){
   if(!clearedState[sIdx]) clearedState[sIdx] = new Set();
   clearedState[sIdx].add(bIdx);
-  const slot = document.getElementById(`cleared-slot-${sIdx}-${bIdx}`);
-  if(slot) slot.innerHTML = blockClearedBannerHTML();
-  // 若目前正好停留在這個遊戲頁，同步更新下方「答題」按鈕區塊
+  // 立刻整頁重繪：改顯示「已作答／正確答案」畫面，並讓下一步按鈕解鎖
   if(viewState.mode === "stage" && viewState.stageIdx === sIdx && viewState.page === bIdx){
-    const s = STAGES[sIdx];
-    const totalPages = (s.blocks||[]).length + 1;
-    const navSlot = document.getElementById("stage-nav-slot");
-    if(navSlot){
-      navSlot.innerHTML = pageNavButtonsHTML(sIdx, bIdx, totalPages, "puzzle");
-      attachStageNavEvents(sIdx, bIdx, totalPages, "puzzle");
-    }
+    renderParticipant();
   }
+}
+/* 已作答過的遊戲頁：不再顯示互動元件，只顯示正確答案 */
+function solvedPuzzleSummaryHTML(pz){
+  const p = pz.data || {};
+  const imgHtml = (p.imageUrl && p.imageUrl.trim()!=="") ? `<img class="block-image" src="${esc(p.imageUrl)}" alt="">` : "";
+  const promptText = p.prompt || p.question || p.instruction || "";
+  let answerLine = "";
+  if(pz.type === "fill"){
+    answerLine = `正確答案：${esc(p.answer)}`;
+  }else if(pz.type === "choice"){
+    const opts = p.options||[];
+    answerLine = `正確答案：${esc(opts[p.correctIndex]||"")}`;
+  }else if(pz.type === "order"){
+    const items = (p.items||[]).filter(t=>t && t.trim()!=="");
+    answerLine = `正確順序：${items.map(t=>esc(t)).join(" → ")}`;
+  }else if(pz.type === "jigsaw"){
+    answerLine = "拼圖已完成";
+  }else if(pz.type === "swipe"){
+    const label = p.correctDirection === "left" ? p.leftLabel : p.rightLabel;
+    answerLine = `正確答案：${esc(label)}`;
+  }
+  return `
+    <div class="puzzle">
+      ${imgHtml}
+      <p class="puzzle-prompt">${esc(promptText)}</p>
+      <p class="solved-answer">${answerLine}</p>
+    </div>`;
 }
 
 /* ===================== Puzzle rendering (participant) ===================== */
 function renderPuzzleHTML(pz, sIdx, pIdx){
   const p = pz.data || {};
   const key = `${sIdx}-${pIdx}`;
+  const imgHtml = (p.imageUrl && p.imageUrl.trim()!=="") ? `<img class="block-image" src="${esc(p.imageUrl)}" alt="">` : "";
   switch(pz.type){
     case "fill":
       return `
         <div class="puzzle">
           <div class="puzzle-label">✏️ 填字挑戰</div>
+          ${imgHtml}
           <p class="puzzle-prompt">${esc(p.prompt)}</p>
           <input type="text" class="fill-input" id="fill-in-${key}" placeholder="輸入答案" maxlength="150">
           <button class="puzzle-btn" id="fill-btn-${key}">送出</button>
@@ -362,6 +405,7 @@ function renderPuzzleHTML(pz, sIdx, pIdx){
       return `
         <div class="puzzle">
           <div class="puzzle-label">☑️ 選擇題</div>
+          ${imgHtml}
           <p class="puzzle-prompt">${esc(p.question)}</p>
           <div class="choice-list" id="choice-list-${key}">
             ${opts.map((o,i)=>`<button class="choice-opt" data-i="${i}">${esc(o)}</button>`).join("")}
@@ -374,6 +418,7 @@ function renderPuzzleHTML(pz, sIdx, pIdx){
       return `
         <div class="puzzle">
           <div class="puzzle-label">🔢 排序挑戰</div>
+          ${imgHtml}
           <p class="puzzle-prompt">${esc(p.instruction)}</p>
           <div class="order-answer" id="order-answer-${key}"></div>
           <div class="order-pool" id="order-pool-${key}">
@@ -394,6 +439,7 @@ function renderPuzzleHTML(pz, sIdx, pIdx){
       return `
         <div class="puzzle">
           <div class="puzzle-label">👉 滑動挑戰</div>
+          ${imgHtml}
           <p class="puzzle-prompt">${esc(p.instruction)}</p>
           <div class="swipe-area">
             <div class="swipe-side-label left">⬅ ${esc(p.leftLabel)}</div>
@@ -416,7 +462,7 @@ function attachPuzzleLogic(pz, sIdx, pIdx){
       const val = document.getElementById(`fill-in-${key}`).value.trim();
       const fb = document.getElementById(`fill-fb-${key}`);
       if(val === String(p.answer||"").trim()){ fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
-      else{ fb.textContent = "❌ 再想想看"; fb.className = "puzzle-feedback bad"; }
+      else{ fb.textContent = getWrongMessage(sIdx,"❌ 再想想看"); fb.className = "puzzle-feedback bad"; }
     };
   }
   if(pz.type === "choice"){
@@ -428,7 +474,7 @@ function attachPuzzleLogic(pz, sIdx, pIdx){
         const fb = document.getElementById(`choice-fb-${key}`);
         list.querySelectorAll(".choice-opt").forEach(b=>b.classList.remove("correct","wrong"));
         if(i === p.correctIndex){ btn.classList.add("correct"); fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
-        else{ btn.classList.add("wrong"); fb.textContent = "❌ 再選一次看看"; fb.className = "puzzle-feedback bad"; }
+        else{ btn.classList.add("wrong"); fb.textContent = getWrongMessage(sIdx,"❌ 再選一次看看"); fb.className = "puzzle-feedback bad"; }
       };
     });
   }
@@ -445,7 +491,7 @@ function attachPuzzleLogic(pz, sIdx, pIdx){
       if(picked.length === correct.length){
         const isCorrect = picked.every((v,i)=>v===correct[i]);
         if(isCorrect){ fb.textContent = "✅ 順序正確！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
-        else{ fb.textContent = "❌ 順序不太對，按重來再試一次"; fb.className = "puzzle-feedback bad"; }
+        else{ fb.textContent = getWrongMessage(sIdx,"❌ 順序不太對，按重來再試一次"); fb.className = "puzzle-feedback bad"; }
       }
     }
     pool.querySelectorAll(".order-chip").forEach(chip=>{
@@ -511,7 +557,7 @@ function attachPuzzleLogic(pz, sIdx, pIdx){
         card.style.transform = `translateX(${dx>0?400:-400}px) rotate(${dx/20}deg)`;
         setTimeout(()=>{
           if(dir === p.correctDirection){ fb.textContent = "✅ 答對了！"; fb.className = "puzzle-feedback ok"; markPuzzleSolved(sIdx,pIdx); }
-          else{ fb.textContent = "❌ 再試一次"; fb.className = "puzzle-feedback bad"; }
+          else{ fb.textContent = getWrongMessage(sIdx,"❌ 再試一次"); fb.className = "puzzle-feedback bad"; }
           card.style.transition = "none"; card.style.transform = "translateX(0) rotate(0)";
         }, 280);
       }else{ card.style.transform = "translateX(0) rotate(0)"; }
@@ -565,7 +611,8 @@ function pageNavButtonsHTML(sIdx, pageIdx, totalPages, curBlockType){
       ? `<button class="nav-btn nav-next" id="navNextStageBtn">前往下一關 →</button>`
       : `<button class="nav-btn nav-next" id="navMenuBtn">返回關卡目錄</button>`;
   }else if(curBlockType === "puzzle"){
-    right = `<button class="nav-btn nav-next" id="navAnswerBtn">答題</button>`;
+    const cleared = isBlockCleared(sIdx, pageIdx);
+    right = `<button class="nav-btn nav-next" id="navNextBtn" ${cleared?"":"disabled"}>${cleared?"下一步 →":"答對才能繼續"}</button>`;
   }else{
     right = `<button class="nav-btn nav-next" id="navNextBtn">下一步 →</button>`;
   }
@@ -574,20 +621,10 @@ function pageNavButtonsHTML(sIdx, pageIdx, totalPages, curBlockType){
 function attachStageNavEvents(sIdx, pageIdx, totalPages, curBlockType){
   const prevBtn = document.getElementById("navPrevBtn");
   const nextBtn = document.getElementById("navNextBtn");
-  const answerBtn = document.getElementById("navAnswerBtn");
   const nextStageBtn = document.getElementById("navNextStageBtn");
   const menuBtn = document.getElementById("navMenuBtn");
   if(prevBtn) prevBtn.onclick = () => { viewState.page = pageIdx-1; renderParticipant(); };
-  if(nextBtn) nextBtn.onclick = () => { viewState.page = pageIdx+1; renderParticipant(); };
-  if(answerBtn) answerBtn.onclick = () => {
-    if(isBlockCleared(sIdx, pageIdx)){
-      viewState.page = pageIdx+1;
-      renderParticipant();
-    }else{
-      const slot = document.getElementById(`cleared-slot-${sIdx}-${pageIdx}`);
-      if(slot) slot.innerHTML = wrongBannerHTML(sIdx);
-    }
-  };
+  if(nextBtn && !nextBtn.disabled) nextBtn.onclick = () => { viewState.page = pageIdx+1; renderParticipant(); };
   if(nextStageBtn) nextStageBtn.onclick = () => { viewState = { mode:"stage", stageIdx: sIdx+1, page: 0 }; renderParticipant(); };
   if(menuBtn) menuBtn.onclick = () => { viewState = { mode:"menu" }; renderParticipant(); };
 }
@@ -615,14 +652,17 @@ function renderStagePage(){
       <h2 style="text-align:center;">恭喜答對！</h2>
       ${ctexts.map(t=>`<p class="story">${esc(t)}</p>`).join("")}`;
   }else if(block.type === "dialogue"){
+    const imgHtml = (block.imageUrl && block.imageUrl.trim()!=="") ? `<img class="block-image" src="${esc(block.imageUrl)}" alt="">` : "";
     bodyHtml = `
       <h2>${esc(s.title)}</h2><h3>${esc(s.sub)}</h3>
+      ${imgHtml}
       <p class="story">${esc(block.text)}</p>`;
   }else{
+    const cleared = isBlockCleared(sIdx, pageIdx);
     bodyHtml = `
       <h2>${esc(s.title)}</h2><h3>互動挑戰</h3>
-      ${renderPuzzleHTML(block.puzzle, sIdx, pageIdx)}
-      <div class="cleared-slot" id="cleared-slot-${sIdx}-${pageIdx}">${isBlockCleared(sIdx,pageIdx)?blockClearedBannerHTML():""}</div>`;
+      ${cleared ? solvedPuzzleSummaryHTML(block.puzzle) : renderPuzzleHTML(block.puzzle, sIdx, pageIdx)}
+      <div class="cleared-slot" id="cleared-slot-${sIdx}-${pageIdx}">${cleared?blockClearedBannerHTML():""}</div>`;
   }
 
   document.getElementById("app").innerHTML = `
@@ -638,7 +678,7 @@ function renderStagePage(){
 
   document.getElementById("backMenuBtn").onclick = () => { viewState = { mode:"menu" }; renderParticipant(); };
   attachStageNavEvents(sIdx, pageIdx, totalPages, block ? block.type : null);
-  if(!isCompletion && block.type === "puzzle"){ attachPuzzleLogic(block.puzzle, sIdx, pageIdx); }
+  if(!isCompletion && block.type === "puzzle" && !isBlockCleared(sIdx,pageIdx)){ attachPuzzleLogic(block.puzzle, sIdx, pageIdx); }
 }
 
 /* ===================== Participant view: dispatcher ===================== */
@@ -723,6 +763,55 @@ function bindAllCounters(){
 
 const PUZZLE_TYPE_LABELS = { fill:"填字詞", choice:"選項", order:"點選排序", jigsaw:"簡易拼圖", swipe:"手指滑動" };
 
+function imageUploadHTML(idPrefix, currentUrl){
+  const has = currentUrl && currentUrl.trim() !== "";
+  return `
+    <div class="img-upload-row">
+      <div class="field-label">圖片（選填，直接上傳照片）</div>
+      <input type="file" accept="image/*" id="${idPrefix}-file">
+      <div class="img-status" id="${idPrefix}-status"></div>
+      <img class="img-preview" id="${idPrefix}-preview" src="${esc(currentUrl||"")}" style="${has?"":"display:none;"}">
+      <input type="hidden" id="${idPrefix}-url" value="${esc(currentUrl||"")}">
+      <button type="button" class="img-remove-btn" id="${idPrefix}-remove" style="${has?"":"display:none;"}">移除圖片</button>
+    </div>`;
+}
+function wireImageUpload(idPrefix, pathHint, onSaved){
+  const fileInput = document.getElementById(`${idPrefix}-file`);
+  if(!fileInput) return;
+  const statusEl = document.getElementById(`${idPrefix}-status`);
+  const previewEl = document.getElementById(`${idPrefix}-preview`);
+  const urlInput = document.getElementById(`${idPrefix}-url`);
+  const removeBtn = document.getElementById(`${idPrefix}-remove`);
+  fileInput.onchange = async () => {
+    const file = fileInput.files[0];
+    if(!file) return;
+    statusEl.textContent = "上傳中…";
+    statusEl.className = "img-status uploading";
+    try{
+      const url = await uploadImageFile(file, pathHint);
+      urlInput.value = url;
+      previewEl.src = url;
+      previewEl.style.display = "block";
+      removeBtn.style.display = "inline-block";
+      statusEl.textContent = "上傳完成";
+      statusEl.className = "img-status";
+      await onSaved(url);
+    }catch(e){
+      console.error("Upload error:", e);
+      statusEl.textContent = "上傳失敗，請確認 Firebase Storage 是否已開通";
+      statusEl.className = "img-status uploading";
+    }
+  };
+  if(removeBtn) removeBtn.onclick = async () => {
+    urlInput.value = "";
+    previewEl.src = "";
+    previewEl.style.display = "none";
+    removeBtn.style.display = "none";
+    statusEl.textContent = "";
+    await onSaved("");
+  };
+}
+
 function puzzleFieldsHTML(pz, pIdx){
   const p = pz.data || {};
   const type = pz.type;
@@ -734,7 +823,8 @@ function puzzleFieldsHTML(pz, pIdx){
       ${counterHTML(pre+"-prompt-c", p.prompt)}
       <div class="field-label">正確答案</div>
       <input type="text" maxlength="150" id="${pre}-answer" value="${esc(p.answer)}">
-      ${counterHTML(pre+"-answer-c", p.answer)}`;
+      ${counterHTML(pre+"-answer-c", p.answer)}
+      ${imageUploadHTML(pre+"-img", p.imageUrl)}`;
   }
   if(type === "choice"){
     const opts = p.options||["","","",""]; while(opts.length<4) opts.push("");
@@ -749,7 +839,8 @@ function puzzleFieldsHTML(pz, pIdx){
       <div class="field-label">正確答案是第幾個選項？</div>
       <select id="${pre}-correct">
         ${[0,1,2,3].map(i=>`<option value="${i}" ${p.correctIndex===i?"selected":""}>選項 ${i+1}</option>`).join("")}
-      </select>`;
+      </select>
+      ${imageUploadHTML(pre+"-img", p.imageUrl)}`;
   }
   if(type === "order"){
     const items = p.items||["","","",""]; while(items.length<4) items.push("");
@@ -758,16 +849,16 @@ function puzzleFieldsHTML(pz, pIdx){
       <textarea maxlength="150" id="${pre}-instruction">${esc(p.instruction)}</textarea>
       ${counterHTML(pre+"-instruction-c", p.instruction)}
       <div class="field-label">正確順序（由上到下依序填寫，第一個先發生）</div>
-      ${[0,1,2,3].map(i=>`<input type="text" maxlength="150" id="${pre}-item-${i}" value="${esc(items[i])}" placeholder="項目 ${i+1}">`).join("")}`;
+      ${[0,1,2,3].map(i=>`<input type="text" maxlength="150" id="${pre}-item-${i}" value="${esc(items[i])}" placeholder="項目 ${i+1}">`).join("")}
+      ${imageUploadHTML(pre+"-img", p.imageUrl)}`;
   }
   if(type === "jigsaw"){
     return `
       <div class="field-label">操作說明</div>
       <textarea maxlength="150" id="${pre}-instruction">${esc(p.instruction)}</textarea>
       ${counterHTML(pre+"-instruction-c", p.instruction)}
-      <div class="field-label">圖片網址（留空則顯示數字拼塊）</div>
-      <input type="text" maxlength="150" id="${pre}-image" value="${esc(p.imageUrl)}" placeholder="https://...">
-      ${counterHTML(pre+"-image-c", p.imageUrl)}`;
+      <p class="small" style="margin:6px 0 0;">上傳一張照片，會自動切成拼圖塊；不上傳則顯示數字拼塊。</p>
+      ${imageUploadHTML(pre+"-img", p.imageUrl)}`;
   }
   if(type === "swipe"){
     return `
@@ -782,18 +873,20 @@ function puzzleFieldsHTML(pz, pIdx){
       <select id="${pre}-dir">
         <option value="left" ${p.correctDirection==="left"?"selected":""}>向左滑</option>
         <option value="right" ${p.correctDirection==="right"?"selected":""}>向右滑</option>
-      </select>`;
+      </select>
+      ${imageUploadHTML(pre+"-img", p.imageUrl)}`;
   }
   return "";
 }
 function collectPuzzleDataFromForm(type, pIdx){
   const pre = `pf-${pIdx}`;
   const g = id => { const el = document.getElementById(id); return el ? el.value : ""; };
-  if(type === "fill") return { prompt: g(`${pre}-prompt`), answer: g(`${pre}-answer`) };
-  if(type === "choice") return { question: g(`${pre}-question`), options:[0,1,2,3].map(i=>g(`${pre}-opt-${i}`)), correctIndex: parseInt(g(`${pre}-correct`)||"0",10) };
-  if(type === "order") return { instruction: g(`${pre}-instruction`), items:[0,1,2,3].map(i=>g(`${pre}-item-${i}`)) };
-  if(type === "jigsaw") return { instruction: g(`${pre}-instruction`), imageUrl: g(`${pre}-image`) };
-  if(type === "swipe") return { instruction: g(`${pre}-instruction`), leftLabel: g(`${pre}-left`), rightLabel: g(`${pre}-right`), correctDirection: g(`${pre}-dir`)||"left" };
+  const imageUrl = g(`${pre}-img-url`);
+  if(type === "fill") return { prompt: g(`${pre}-prompt`), answer: g(`${pre}-answer`), imageUrl };
+  if(type === "choice") return { question: g(`${pre}-question`), options:[0,1,2,3].map(i=>g(`${pre}-opt-${i}`)), correctIndex: parseInt(g(`${pre}-correct`)||"0",10), imageUrl };
+  if(type === "order") return { instruction: g(`${pre}-instruction`), items:[0,1,2,3].map(i=>g(`${pre}-item-${i}`)), imageUrl };
+  if(type === "jigsaw") return { instruction: g(`${pre}-instruction`), imageUrl };
+  if(type === "swipe") return { instruction: g(`${pre}-instruction`), leftLabel: g(`${pre}-left`), rightLabel: g(`${pre}-right`), correctDirection: g(`${pre}-dir`)||"left", imageUrl };
   return {};
 }
 
@@ -806,6 +899,7 @@ function stageBlocksEditorHTML(stage){
       <div class="block-card-head"><span class="idx">第 ${i+1} 頁・對話</span><button class="remove-btn" data-remove-block="${i}">移除</button></div>
       <textarea maxlength="150" id="ed-block-${i}">${esc(b.text)}</textarea>
       ${counterHTML("ed-block-"+i+"-c", b.text)}
+      ${imageUploadHTML("ed-block-"+i+"-img", b.imageUrl)}
     </div>`;
     }
     const pz = b.puzzle || { type:"fill", data:{} };
@@ -899,6 +993,8 @@ function harvestFormIntoStage(idx){
     if(b.type === "dialogue"){
       const v = g(`ed-block-${i}`);
       if(v !== null) b.text = v.slice(0,MAXLEN);
+      const imgUrl = g(`ed-block-${i}-img-url`);
+      if(imgUrl !== null) b.imageUrl = imgUrl;
     }else{
       const typeSel = document.querySelector(`[data-ptype="${i}"]`);
       if(typeSel){
@@ -922,6 +1018,22 @@ function attachContentTabEvents(selectedIdx, rerender){
     btn.onclick = () => { harvestFormIntoStage(selectedIdx); rerender(parseInt(btn.dataset.i,10)); };
   });
   bindAllCounters();
+
+  (STAGES[selectedIdx].blocks||[]).forEach((b,i)=>{
+    const stageId = STAGES[selectedIdx].id;
+    if(b.type === "dialogue"){
+      wireImageUpload(`ed-block-${i}-img`, `${stageId}-d${i}`, async (url) => {
+        STAGES[selectedIdx].blocks[i].imageUrl = url;
+        await saveContent();
+      });
+    }else{
+      wireImageUpload(`pf-${i}-img`, `${stageId}-p${i}`, async (url) => {
+        if(!STAGES[selectedIdx].blocks[i].puzzle.data) STAGES[selectedIdx].blocks[i].puzzle.data = {};
+        STAGES[selectedIdx].blocks[i].puzzle.data.imageUrl = url;
+        await saveContent();
+      });
+    }
+  });
 
   document.getElementById("addStageBtn").onclick = async () => {
     harvestFormIntoStage(selectedIdx);
