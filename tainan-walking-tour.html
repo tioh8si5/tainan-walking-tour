@@ -133,6 +133,8 @@ button:hover{ opacity: 0.85; }
 .block-card-head .idx{ font-family:'Zen Kaku Gothic New', sans-serif; font-size: 11px; color: var(--brass); letter-spacing:0.08em; }
 .remove-btn{ background: none; color: var(--seal); font-size: 12px; padding: 3px 8px; border: 1px solid var(--seal); }
 .add-block-btn{ margin-top: 10px; padding: 9px 16px; background: var(--paper-dark); color: var(--navy); font-size: 12.5px; font-weight: 600; }
+.add-row{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.add-row .add-block-btn{ margin-top: 0; flex: 1 1 auto; }
 .section-title{ font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 700; color: var(--navy); margin: 24px 0 4px; padding-top: 14px; border-top: 1px solid var(--line); }
 .delete-stage-row{ margin-top: 20px; text-align: right; }
 .delete-stage-btn{ background: none; color: var(--seal); font-size: 12px; padding: 6px 12px; border: 1px solid var(--seal); }
@@ -149,7 +151,8 @@ button:hover{ opacity: 0.85; }
 .menu-item.locked .menu-item-code{ color: var(--locked); }
 .menu-item-title{ flex: 1; font-family: 'Noto Serif TC', serif; font-size: 15.5px; font-weight: 700; color: var(--navy); }
 .menu-item.locked .menu-item-title{ color: var(--locked); }
-.menu-item-status{ font-size: 18px; flex-shrink: 0; }
+.menu-item-status{ font-family: 'Noto Sans TC', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; flex-shrink: 0; padding: 6px 12px; border-radius: 2px; background: var(--seal); color: var(--paper-light); }
+.menu-item.locked .menu-item-status{ background: var(--paper-dark); color: var(--locked); }
 
 /* ---------- Stage page (participant, paged view) ---------- */
 .stage-page-header{ display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 0; }
@@ -180,63 +183,58 @@ function genId(prefix){ idSeq++; return prefix + "-" + idSeq; }
 
 const DEFAULT_STAGES = [
   { id:"s0", code:"序　文", title:"湯德章紀念公園", sub:"一個圓環，府城的心臟地帶",
-    texts:[
-      "腳下這座圓環，日治時期是市街改正計畫的核心。",
-      "四面延伸出去的道路，串起消防、行政、議會、治安幾座建築，像心臟牽動整座城市的日常運作。"
-    ], puzzles:[], wrongTexts:[],
+    blocks:[
+      { type:"dialogue", text:"腳下這座圓環，日治時期是市街改正計畫的核心。" },
+      { type:"dialogue", text:"四面延伸出去的道路，串起消防、行政、議會、治安幾座建築，像心臟牽動整座城市的日常運作。" }
+    ], wrongTexts:[],
     completionTexts:["接下來，我們要一站一站走過去，看看不同建築在當年各自扮演的角色。"] },
   { id:"s1", code:"第一站", title:"合同廳舍", sub:"一座望向全城的高塔",
-    texts:[
-      "沒有電話的年代，值班人員得登高遠望，一發現異狀立刻搖鈴示警。",
-      "這座樓後來也成為警消單位共同辦公的地方，一棟建築，守著兩種任務。"
-    ], puzzles:[
-      { type:"fill", data:{ prompt:"這座高塔沒有電話可用，只能靠人力登高遠望監看火警，因此被稱為「＿火樓」，請填入缺的那個字。", answer:"望" } }
+    blocks:[
+      { type:"dialogue", text:"沒有電話的年代，值班人員得登高遠望，一發現異狀立刻搖鈴示警。" },
+      { type:"dialogue", text:"這座樓後來也成為警消單位共同辦公的地方，一棟建築，守著兩種任務。" },
+      { type:"puzzle", puzzle:{ type:"fill", data:{ prompt:"這座高塔沒有電話可用，只能靠人力登高遠望監看火警，因此被稱為「＿火樓」，請填入缺的那個字。", answer:"望" } } }
     ],
     wrongTexts:["再想想看，這座塔的別名藏著答案的線索喔！"],
     completionTexts:["沒錯，就是「望」！這座望火樓在沒有電話的年代，是府城最早期、也最直接的城市安全防線。"] },
   { id:"s2", code:"第二站", title:"台南州廳", sub:"一棟建築見證的行政變化",
-    texts:[
-      "這棟建築曾是全台南最高的行政機關，見證了地方制度從「廳」改為「州」的轉變。",
-      "行政人員經常需要下鄉核對戶籍，一份份名簿記錄著尋常人家的生活點滴。"
-    ], puzzles:[
-      { type:"choice", data:{ question:"台南州廳的行政人員，除了辦公之外，經常需要下鄉做什麼工作？",
-        options:["核對戶籍調查","販賣農產品","訓練軍隊","建造橋樑"], correctIndex:0 } }
+    blocks:[
+      { type:"dialogue", text:"這棟建築曾是全台南最高的行政機關，見證了地方制度從「廳」改為「州」的轉變。" },
+      { type:"dialogue", text:"行政人員經常需要下鄉核對戶籍，一份份名簿記錄著尋常人家的生活點滴。" },
+      { type:"puzzle", puzzle:{ type:"choice", data:{ question:"台南州廳的行政人員，除了辦公之外，經常需要下鄉做什麼工作？",
+        options:["核對戶籍調查","販賣農產品","訓練軍隊","建造橋樑"], correctIndex:0 } } }
     ],
     wrongTexts:["再選一次，想想看行政人員的日常工作內容。"],
     completionTexts:["答對了！戶口調查正是當年基層治理最重要的日常工作，一份份名簿記錄著整座城市的人口流動。"] },
   { id:"s3", code:"第三站", title:"台南州會", sub:"一座天橋連起的兩棟樓",
-    texts:[
-      "州廳與這棟建築之間有一座相連的天橋。",
-      "這裡曾是地方議會，議員一半官派、一半民選，是地方自治很早期的一次嘗試。"
-    ], puzzles:[
-      { type:"order", data:{ instruction:"請按時間先後，點選建立這棟建築身分轉變的過程。",
-        items:["台南州廳","空軍供應司令部","台南市政府","國立台灣文學館"] } }
+    blocks:[
+      { type:"dialogue", text:"州廳與這棟建築之間有一座相連的天橋。" },
+      { type:"dialogue", text:"這裡曾是地方議會，議員一半官派、一半民選，是地方自治很早期的一次嘗試。" },
+      { type:"puzzle", puzzle:{ type:"order", data:{ instruction:"請按時間先後，點選建立這棟建築身分轉變的過程。",
+        items:["台南州廳","空軍供應司令部","台南市政府","國立台灣文學館"] } } }
     ],
     wrongTexts:["順序不太對，再想想這棟建築身分轉變的時間先後。"],
     completionTexts:["順序正確！這棟建築的身分轉變，也正好呼應了台南從日治到戰後的城市發展軌跡。"] },
   { id:"s4", code:"第四站", title:"台南警察署（南美館）", sub:"一棟樓的日常百態",
-    texts:[
-      "這棟建築在1931年落成，曾是全台南治安體系的核心。",
-      "值班的日常、同僚間的閒聊，構成了這裡最真實的樣貌。"
-    ], puzzles:[
-      { type:"jigsaw", data:{ instruction:"老照片被打散了，動動手指把它拼回原本的樣子吧（點兩塊交換位置）。", imageUrl:"" } }
+    blocks:[
+      { type:"dialogue", text:"這棟建築在1931年落成，曾是全台南治安體系的核心。" },
+      { type:"dialogue", text:"值班的日常、同僚間的閒聊，構成了這裡最真實的樣貌。" },
+      { type:"puzzle", puzzle:{ type:"jigsaw", data:{ instruction:"老照片被打散了，動動手指把它拼回原本的樣子吧（點兩塊交換位置）。", imageUrl:"" } } }
     ],
     wrongTexts:["拼圖還沒對齊，再交換看看拼塊的位置吧。"],
     completionTexts:["拼圖完成！這棟建築見證了整個治安體系的日常運作，也留下了許多值得細看的歷史痕跡。"] },
   { id:"s5", code:"第五站", title:"武德殿", sub:"道場裡的吆喝聲",
-    texts:[
-      "想像這座道場裡，學生與警察一起練柔道、劍道的畫面。",
-      "教官的口令、學員的汗水，是那個年代對紀律的重視。"
-    ], puzzles:[
-      { type:"swipe", data:{ instruction:"當年武德殿是警察和學生共用的訓練場地，對嗎？", leftLabel:"不對", rightLabel:"沒錯", correctDirection:"right" } }
+    blocks:[
+      { type:"dialogue", text:"想像這座道場裡，學生與警察一起練柔道、劍道的畫面。" },
+      { type:"dialogue", text:"教官的口令、學員的汗水，是那個年代對紀律的重視。" },
+      { type:"puzzle", puzzle:{ type:"swipe", data:{ instruction:"當年武德殿是警察和學生共用的訓練場地，對嗎？", leftLabel:"不對", rightLabel:"沒錯", correctDirection:"right" } } }
     ],
     wrongTexts:["再想一次，武德殿當年真的是警察和學生共用的訓練場地嗎？"],
     completionTexts:["答對了！武德殿當年確實是警察與學生共用的訓練場地，紀律精神就是在這裡養成的。"] },
   { id:"s6", code:"結　語", title:"回到公園", sub:"走過一圈，看見一座城市的樣子",
-    texts:[
-      "消防、行政、議會、治安、教育——這幾種城市機能原本各自運作。",
-      "卻共同撐起了府城居民的日常生活，也留下了今天的樣貌。"
-    ], puzzles:[], wrongTexts:[],
+    blocks:[
+      { type:"dialogue", text:"消防、行政、議會、治安、教育——這幾種城市機能原本各自運作。" },
+      { type:"dialogue", text:"卻共同撐起了府城居民的日常生活，也留下了今天的樣貌。" }
+    ], wrongTexts:[],
     completionTexts:["謝謝你走完這趟府城巡禮，希望這幾棟老建築，從此在你眼中有了不一樣的故事。"] }
 ];
 
@@ -263,6 +261,30 @@ if(!FIREBASE_NOT_CONFIGURED){
 let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
 let unlockedStages = {}; // { stageId: true }
 
+/* 防呆：確保每個關卡物件都有正確的欄位型別，避免舊版資料或手動編輯造成的欄位缺漏 */
+function normalizeStage(s, idx){
+  const out = {
+    id: (s && s.id) || genId("stage"),
+    code: (s && s.code) || `第${idx}站`,
+    title: (s && s.title) || "",
+    sub: (s && s.sub) || "",
+    blocks: (s && Array.isArray(s.blocks)) ? s.blocks : [],
+    wrongTexts: (s && Array.isArray(s.wrongTexts)) ? s.wrongTexts : [],
+    completionTexts: (s && Array.isArray(s.completionTexts)) ? s.completionTexts : []
+  };
+  out.blocks = out.blocks.map(b=>{
+    if(b && b.type === "puzzle"){
+      return { type:"puzzle", puzzle: (b.puzzle && b.puzzle.type) ? b.puzzle : { type:"fill", data:{ prompt:"", answer:"" } } };
+    }
+    return { type:"dialogue", text: (b && typeof b.text === "string") ? b.text : "" };
+  });
+  return out;
+}
+function normalizeAllStages(arr){
+  if(!Array.isArray(arr) || arr.length === 0) return JSON.parse(JSON.stringify(DEFAULT_STAGES));
+  return arr.map((s,i)=>normalizeStage(s,i));
+}
+
 async function saveContent(){
   try{ await db.ref("content").set(STAGES); }
   catch(e){ console.error("Firebase error:", e); alert("儲存失敗，請確認網路連線或 Firebase 設定是否正確"); }
@@ -281,25 +303,17 @@ function esc(s){ return String(s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','
 function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 /* ===================== Stage-cleared tracking (per browser, local only) ===================== */
-let clearedState = {}; // { stageIdx: Set(puzzleIdx solved) }
+let clearedState = {}; // { stageIdx: Set(blockIdx solved) }
 let viewState = { mode: "menu", stageIdx: 0, page: 0 }; // mode: 'menu' | 'stage'
 
-function getPageTypes(stage){
-  return (stage.puzzles||[]).length > 0 ? ["dialogue","interactive","completion"] : ["dialogue","completion"];
+function isBlockCleared(sIdx, bIdx){
+  return !!(clearedState[sIdx] && clearedState[sIdx].has(bIdx));
 }
-function isStageCleared(sIdx){
-  const s = STAGES[sIdx];
-  if(!s) return false;
-  const puzzles = s.puzzles||[];
-  if(puzzles.length === 0) return true; // no puzzle to solve, nothing blocking "cleared"
-  const set = clearedState[sIdx];
-  return !!set && set.size === puzzles.length;
-}
-function clearedBannerHTML(sIdx){
+function blockClearedBannerHTML(){
   return `
     <div class="cleared-banner">
-      <div class="cleared-stamp">通關</div>
-      <div class="cleared-text">🎉 已破第 ${sIdx+1} 關！<small>按下方「答題」按鈕即可過關</small></div>
+      <div class="cleared-stamp">✓</div>
+      <div class="cleared-text">✅ 答對了！<small>按下方「答題」按鈕繼續</small></div>
     </div>`;
 }
 function wrongBannerHTML(sIdx){
@@ -312,20 +326,19 @@ function wrongBannerHTML(sIdx){
       <div class="wrong-text">${msg}</div>
     </div>`;
 }
-function markPuzzleSolved(sIdx, pIdx){
+function markPuzzleSolved(sIdx, bIdx){
   if(!clearedState[sIdx]) clearedState[sIdx] = new Set();
-  clearedState[sIdx].add(pIdx);
-  const slot = document.getElementById(`cleared-slot-${sIdx}`);
-  if(slot) slot.innerHTML = isStageCleared(sIdx) ? clearedBannerHTML(sIdx) : "";
-  // 若目前正好停留在這一站的互動頁，同步更新下一步按鈕的可按狀態
-  if(viewState.mode === "stage" && viewState.stageIdx === sIdx){
-    const pageTypes = getPageTypes(STAGES[sIdx]);
-    if(pageTypes[viewState.page] === "interactive"){
-      const navSlot = document.getElementById("stage-nav-slot");
-      if(navSlot){
-        navSlot.innerHTML = pageNavButtonsHTML(sIdx, viewState.page, pageTypes);
-        attachStageNavEvents(sIdx, viewState.page, pageTypes);
-      }
+  clearedState[sIdx].add(bIdx);
+  const slot = document.getElementById(`cleared-slot-${sIdx}-${bIdx}`);
+  if(slot) slot.innerHTML = blockClearedBannerHTML();
+  // 若目前正好停留在這個遊戲頁，同步更新下方「答題」按鈕區塊
+  if(viewState.mode === "stage" && viewState.stageIdx === sIdx && viewState.page === bIdx){
+    const s = STAGES[sIdx];
+    const totalPages = (s.blocks||[]).length + 1;
+    const navSlot = document.getElementById("stage-nav-slot");
+    if(navSlot){
+      navSlot.innerHTML = pageNavButtonsHTML(sIdx, bIdx, totalPages, "puzzle");
+      attachStageNavEvents(sIdx, bIdx, totalPages, "puzzle");
     }
   }
 }
@@ -513,14 +526,12 @@ function attachPuzzleLogic(pz, sIdx, pIdx){
 function renderStageMenu(){
   const items = STAGES.map((s,i)=>{
     const unlocked = isStageUnlocked(i);
-    const cleared = unlocked && isStageCleared(i);
-    const statusIcon = !unlocked ? "🔒" : (cleared ? "✅" : "🔓");
     const cls = unlocked ? "menu-item" : "menu-item locked";
     return `
       <button class="${cls}" ${unlocked ? `data-goto="${i}"` : "disabled"}>
         <span class="menu-item-code">${esc(s.code)}</span>
         <span class="menu-item-title">${esc(s.title)}</span>
-        <span class="menu-item-status">${statusIcon}</span>
+        <span class="menu-item-status">${unlocked ? "點選遊玩" : "鎖定"}</span>
       </button>`;
   }).join("");
 
@@ -543,24 +554,24 @@ function renderStageMenu(){
   });
 }
 
-/* ===================== Participant view: one stage, paged (對話／互動／完成) ===================== */
-function pageNavButtonsHTML(sIdx, pageIdx, pageTypes){
-  const curType = pageTypes[pageIdx];
+/* ===================== Participant view: one stage, block-by-block (可交錯對話／互動遊戲) ===================== */
+function pageNavButtonsHTML(sIdx, pageIdx, totalPages, curBlockType){
+  const isCompletion = pageIdx === totalPages-1;
   const left = pageIdx > 0 ? `<button class="nav-btn nav-prev" id="navPrevBtn">← 上一步</button>` : `<span></span>`;
   let right = "";
-  if(curType === "completion"){
+  if(isCompletion){
     const hasNextStage = (sIdx+1) < STAGES.length && isStageUnlocked(sIdx+1);
     right = hasNextStage
       ? `<button class="nav-btn nav-next" id="navNextStageBtn">前往下一關 →</button>`
       : `<button class="nav-btn nav-next" id="navMenuBtn">返回關卡目錄</button>`;
-  }else if(curType === "interactive"){
+  }else if(curBlockType === "puzzle"){
     right = `<button class="nav-btn nav-next" id="navAnswerBtn">答題</button>`;
   }else{
     right = `<button class="nav-btn nav-next" id="navNextBtn">下一步 →</button>`;
   }
   return `<div class="stage-nav">${left}${right}</div>`;
 }
-function attachStageNavEvents(sIdx, pageIdx, pageTypes){
+function attachStageNavEvents(sIdx, pageIdx, totalPages, curBlockType){
   const prevBtn = document.getElementById("navPrevBtn");
   const nextBtn = document.getElementById("navNextBtn");
   const answerBtn = document.getElementById("navAnswerBtn");
@@ -569,11 +580,11 @@ function attachStageNavEvents(sIdx, pageIdx, pageTypes){
   if(prevBtn) prevBtn.onclick = () => { viewState.page = pageIdx-1; renderParticipant(); };
   if(nextBtn) nextBtn.onclick = () => { viewState.page = pageIdx+1; renderParticipant(); };
   if(answerBtn) answerBtn.onclick = () => {
-    if(isStageCleared(sIdx)){
-      viewState.page = pageIdx+1; // 前往完成頁
+    if(isBlockCleared(sIdx, pageIdx)){
+      viewState.page = pageIdx+1;
       renderParticipant();
     }else{
-      const slot = document.getElementById(`cleared-slot-${sIdx}`);
+      const slot = document.getElementById(`cleared-slot-${sIdx}-${pageIdx}`);
       if(slot) slot.innerHTML = wrongBannerHTML(sIdx);
     }
   };
@@ -584,31 +595,34 @@ function attachStageNavEvents(sIdx, pageIdx, pageTypes){
 function renderStagePage(){
   const sIdx = viewState.stageIdx;
   const s = STAGES[sIdx];
-  const pageTypes = getPageTypes(s);
-  if(viewState.page >= pageTypes.length) viewState.page = pageTypes.length-1;
-  const curType = pageTypes[viewState.page];
-  const labels = { dialogue:"對話", interactive:"互動", completion:"完成" };
+  const blocks = s.blocks||[];
+  const totalPages = blocks.length + 1; // +1 為結尾的完成頁
+  if(viewState.page >= totalPages) viewState.page = totalPages-1;
+  const pageIdx = viewState.page;
+  const isCompletion = pageIdx === blocks.length;
+  const block = isCompletion ? null : blocks[pageIdx];
 
-  const tabsHtml = pageTypes.map((t,i)=>`<span class="page-tab ${i===viewState.page?'active':''}">${labels[t]}</span>`).join("");
+  const tabsHtml = blocks.map((b,i)=>{
+    const label = b.type === "dialogue" ? "對話" : "互動";
+    return `<span class="page-tab ${i===pageIdx?'active':''}">${label}</span>`;
+  }).join("") + `<span class="page-tab ${isCompletion?'active':''}">完成</span>`;
 
   let bodyHtml = "";
-  if(curType === "dialogue"){
-    const texts = (s.texts||[]).filter(t=>t && t.trim()!=="");
-    bodyHtml = `
-      <h2>${esc(s.title)}</h2><h3>${esc(s.sub)}</h3>
-      ${texts.map(t=>`<p class="story">${esc(t)}</p>`).join("")}`;
-  }else if(curType === "interactive"){
-    const puzzlesHtml = (s.puzzles||[]).map((pz,pIdx)=>renderPuzzleHTML(pz,sIdx,pIdx)).join("");
-    bodyHtml = `
-      <h2>${esc(s.title)}</h2><h3>互動挑戰</h3>
-      ${puzzlesHtml}
-      <div class="cleared-slot" id="cleared-slot-${sIdx}">${isStageCleared(sIdx)?clearedBannerHTML(sIdx):""}</div>`;
-  }else{
+  if(isCompletion){
     const ctexts = (s.completionTexts||[]).filter(t=>t && t.trim()!=="");
     bodyHtml = `
       <div class="completion-badge">🎉</div>
       <h2 style="text-align:center;">恭喜答對！</h2>
       ${ctexts.map(t=>`<p class="story">${esc(t)}</p>`).join("")}`;
+  }else if(block.type === "dialogue"){
+    bodyHtml = `
+      <h2>${esc(s.title)}</h2><h3>${esc(s.sub)}</h3>
+      <p class="story">${esc(block.text)}</p>`;
+  }else{
+    bodyHtml = `
+      <h2>${esc(s.title)}</h2><h3>互動挑戰</h3>
+      ${renderPuzzleHTML(block.puzzle, sIdx, pageIdx)}
+      <div class="cleared-slot" id="cleared-slot-${sIdx}-${pageIdx}">${isBlockCleared(sIdx,pageIdx)?blockClearedBannerHTML():""}</div>`;
   }
 
   document.getElementById("app").innerHTML = `
@@ -619,12 +633,12 @@ function renderStagePage(){
       </div>
       <div class="page-tabs">${tabsHtml}</div>
       <div class="stages"><div class="card">${bodyHtml}</div></div>
-      <div id="stage-nav-slot">${pageNavButtonsHTML(sIdx, viewState.page, pageTypes)}</div>
+      <div id="stage-nav-slot">${pageNavButtonsHTML(sIdx, pageIdx, totalPages, block ? block.type : null)}</div>
     </div>`;
 
   document.getElementById("backMenuBtn").onclick = () => { viewState = { mode:"menu" }; renderParticipant(); };
-  attachStageNavEvents(sIdx, viewState.page, pageTypes);
-  if(curType === "interactive"){ (s.puzzles||[]).forEach((pz,pIdx)=>attachPuzzleLogic(pz,sIdx,pIdx)); }
+  attachStageNavEvents(sIdx, pageIdx, totalPages, block ? block.type : null);
+  if(!isCompletion && block.type === "puzzle"){ attachPuzzleLogic(block.puzzle, sIdx, pageIdx); }
 }
 
 /* ===================== Participant view: dispatcher ===================== */
@@ -783,18 +797,35 @@ function collectPuzzleDataFromForm(type, pIdx){
   return {};
 }
 
-function stageTextsEditorHTML(stage){
-  const texts = stage.texts||[];
-  const blocks = texts.map((t,i)=>`
+function stageBlocksEditorHTML(stage){
+  const blocks = stage.blocks||[];
+  const rendered = blocks.map((b,i)=>{
+    if(b.type === "dialogue"){
+      return `
     <div class="block-card">
-      <div class="block-card-head"><span class="idx">第 ${i+1} 段</span><button class="remove-btn" data-remove-text="${i}">移除</button></div>
-      <textarea maxlength="150" id="ed-text-${i}">${esc(t)}</textarea>
-      ${counterHTML("ed-text-"+i+"-c", t)}
-    </div>`).join("");
+      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・對話</span><button class="remove-btn" data-remove-block="${i}">移除</button></div>
+      <textarea maxlength="150" id="ed-block-${i}">${esc(b.text)}</textarea>
+      ${counterHTML("ed-block-"+i+"-c", b.text)}
+    </div>`;
+    }
+    const pz = b.puzzle || { type:"fill", data:{} };
+    return `
+    <div class="block-card">
+      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・互動遊戲</span><button class="remove-btn" data-remove-block="${i}">移除</button></div>
+      <div class="field-label">遊戲類型</div>
+      <select data-ptype="${i}">
+        ${Object.keys(PUZZLE_TYPE_LABELS).map(t=>`<option value="${t}" ${pz.type===t?"selected":""}>${PUZZLE_TYPE_LABELS[t]}</option>`).join("")}
+      </select>
+      <div data-pfields="${i}">${puzzleFieldsHTML(pz,i)}</div>
+    </div>`;
+  }).join("");
   return `
-    <div class="section-title">① 對話頁文字（每段最多150字，可自由新增段落）</div>
-    ${blocks}
-    <button class="add-block-btn" id="addTextBtn">＋ 新增一段文字</button>`;
+    <div class="section-title">① 內容頁面（依新增順序顯示，對話與遊戲可自由交錯）</div>
+    ${rendered}
+    <div class="add-row">
+      <button class="add-block-btn" id="addDialogueBtn">＋ 新增一頁「對話」</button>
+      <button class="add-block-btn" id="addPuzzleBlockBtn">＋ 新增一頁「互動遊戲」</button>
+    </div>`;
 }
 
 function stageCompletionEditorHTML(stage){
@@ -820,33 +851,16 @@ function stageWrongEditorHTML(stage){
       ${counterHTML("ed-wrong-"+i+"-c", t)}
     </div>`).join("");
   return `
-    <div class="section-title">④ 答錯提示文字（點「答題」但還沒答對時顯示）</div>
+    <div class="section-title">② 答錯提示文字（點「答題」但還沒答對時顯示）</div>
     ${blocks}
     <button class="add-block-btn" id="addWrongBtn">＋ 新增一段文字</button>`;
-}
-
-function stagePuzzlesEditorHTML(stage){
-  const puzzles = stage.puzzles||[];
-  const blocks = puzzles.map((pz,i)=>`
-    <div class="block-card">
-      <div class="block-card-head"><span class="idx">遊戲 ${i+1}</span><button class="remove-btn" data-remove-puzzle="${i}">移除</button></div>
-      <div class="field-label">遊戲類型</div>
-      <select data-ptype="${i}">
-        ${Object.keys(PUZZLE_TYPE_LABELS).map(t=>`<option value="${t}" ${pz.type===t?"selected":""}>${PUZZLE_TYPE_LABELS[t]}</option>`).join("")}
-      </select>
-      <div data-pfields="${i}">${puzzleFieldsHTML(pz,i)}</div>
-    </div>`).join("");
-  return `
-    <div class="section-title">② 互動頁遊戲（可新增多個，型式：填字詞／選項／點選排序／簡易拼圖／手指滑動）</div>
-    ${blocks}
-    <button class="add-block-btn" id="addPuzzleBtn">＋ 新增一個遊戲</button>`;
 }
 
 function contentTabHTML(selectedIdx){
   const s = STAGES[selectedIdx];
   const tabs = STAGES.map((st,i)=>`<button class="stage-select-btn ${i===selectedIdx?'active':''}" data-i="${i}">${esc(st.code)}</button>`).join("");
   return `
-    <p class="small">每個欄位最多 150 字。這一站會分成三頁給參加者看：①對話 ②互動 ③完成，文字與遊戲皆可自由新增，改完請按「儲存這一站」</p>
+    <p class="small">每個欄位最多 150 字。「內容頁面」會依你新增的順序，一頁一頁顯示給參加者看，對話和互動遊戲可以自由交錯排列，改完請按「儲存這一站」</p>
     <div class="stage-select-row">${tabs}<button class="add-stage-btn" id="addStageBtn">＋ 新增關卡</button></div>
 
     <div class="field-label">站別代碼</div>
@@ -859,8 +873,7 @@ function contentTabHTML(selectedIdx){
     <input type="text" maxlength="150" id="ed-sub" value="${esc(s.sub)}">
     ${counterHTML("ed-sub-c", s.sub)}
 
-    ${stageTextsEditorHTML(s)}
-    ${stagePuzzlesEditorHTML(s)}
+    ${stageBlocksEditorHTML(s)}
     ${stageWrongEditorHTML(s)}
     ${stageCompletionEditorHTML(s)}
 
@@ -882,9 +895,17 @@ function harvestFormIntoStage(idx){
   const title = g("ed-title"); if(title !== null) stage.title = title.slice(0,MAXLEN);
   const sub = g("ed-sub"); if(sub !== null) stage.sub = sub.slice(0,MAXLEN);
 
-  (stage.texts||[]).forEach((t,i)=>{
-    const v = g(`ed-text-${i}`);
-    if(v !== null) stage.texts[i] = v.slice(0,MAXLEN);
+  (stage.blocks||[]).forEach((b,i)=>{
+    if(b.type === "dialogue"){
+      const v = g(`ed-block-${i}`);
+      if(v !== null) b.text = v.slice(0,MAXLEN);
+    }else{
+      const typeSel = document.querySelector(`[data-ptype="${i}"]`);
+      if(typeSel){
+        b.puzzle.type = typeSel.value;
+        b.puzzle.data = collectPuzzleDataFromForm(b.puzzle.type, i);
+      }
+    }
   });
   (stage.completionTexts||[]).forEach((t,i)=>{
     const v = g(`ed-completion-${i}`);
@@ -893,13 +914,6 @@ function harvestFormIntoStage(idx){
   (stage.wrongTexts||[]).forEach((t,i)=>{
     const v = g(`ed-wrong-${i}`);
     if(v !== null) stage.wrongTexts[i] = v.slice(0,MAXLEN);
-  });
-  (stage.puzzles||[]).forEach((pz,i)=>{
-    const typeSel = document.querySelector(`[data-ptype="${i}"]`);
-    if(typeSel){
-      pz.type = typeSel.value;
-      pz.data = collectPuzzleDataFromForm(pz.type, i);
-    }
   });
 }
 
@@ -912,7 +926,7 @@ function attachContentTabEvents(selectedIdx, rerender){
   document.getElementById("addStageBtn").onclick = async () => {
     harvestFormIntoStage(selectedIdx);
     const n = STAGES.length;
-    STAGES.push({ id: genId("stage"), code:`第${n}站`, title:"新關卡", sub:"", texts:[""], puzzles:[], wrongTexts:[""], completionTexts:[""] });
+    STAGES.push({ id: genId("stage"), code:`第${n}站`, title:"新關卡", sub:"", blocks:[{type:"dialogue",text:""}], wrongTexts:[""], completionTexts:[""] });
     await saveContent();
     rerender(STAGES.length-1);
   };
@@ -926,17 +940,35 @@ function attachContentTabEvents(selectedIdx, rerender){
     };
   }
 
-  document.getElementById("addTextBtn").onclick = async () => {
+  document.getElementById("addDialogueBtn").onclick = async () => {
     harvestFormIntoStage(selectedIdx);
-    STAGES[selectedIdx].texts.push("");
+    if(!STAGES[selectedIdx].blocks) STAGES[selectedIdx].blocks = [];
+    STAGES[selectedIdx].blocks.push({ type:"dialogue", text:"" });
     await saveContent();
     rerender(selectedIdx);
   };
-  document.querySelectorAll("[data-remove-text]").forEach(btn=>{
+  document.getElementById("addPuzzleBlockBtn").onclick = async () => {
+    harvestFormIntoStage(selectedIdx);
+    if(!STAGES[selectedIdx].blocks) STAGES[selectedIdx].blocks = [];
+    STAGES[selectedIdx].blocks.push({ type:"puzzle", puzzle:{ type:"fill", data:{ prompt:"", answer:"" } } });
+    await saveContent();
+    rerender(selectedIdx);
+  };
+  document.querySelectorAll("[data-remove-block]").forEach(btn=>{
     btn.onclick = async () => {
       harvestFormIntoStage(selectedIdx);
-      const i = parseInt(btn.dataset.removeText,10);
-      STAGES[selectedIdx].texts.splice(i,1);
+      const i = parseInt(btn.dataset.removeBlock,10);
+      STAGES[selectedIdx].blocks.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+  document.querySelectorAll("[data-ptype]").forEach(sel=>{
+    sel.onchange = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(sel.dataset.ptype,10);
+      STAGES[selectedIdx].blocks[i].puzzle.type = sel.value;
+      STAGES[selectedIdx].blocks[i].puzzle.data = {};
       await saveContent();
       rerender(selectedIdx);
     };
@@ -971,32 +1003,6 @@ function attachContentTabEvents(selectedIdx, rerender){
       harvestFormIntoStage(selectedIdx);
       const i = parseInt(btn.dataset.removeWrong,10);
       STAGES[selectedIdx].wrongTexts.splice(i,1);
-      await saveContent();
-      rerender(selectedIdx);
-    };
-  });
-
-  document.getElementById("addPuzzleBtn").onclick = async () => {
-    harvestFormIntoStage(selectedIdx);
-    STAGES[selectedIdx].puzzles.push({ type:"fill", data:{ prompt:"", answer:"" } });
-    await saveContent();
-    rerender(selectedIdx);
-  };
-  document.querySelectorAll("[data-remove-puzzle]").forEach(btn=>{
-    btn.onclick = async () => {
-      harvestFormIntoStage(selectedIdx);
-      const i = parseInt(btn.dataset.removePuzzle,10);
-      STAGES[selectedIdx].puzzles.splice(i,1);
-      await saveContent();
-      rerender(selectedIdx);
-    };
-  });
-  document.querySelectorAll("[data-ptype]").forEach(sel=>{
-    sel.onchange = async () => {
-      harvestFormIntoStage(selectedIdx);
-      const i = parseInt(sel.dataset.ptype,10);
-      STAGES[selectedIdx].puzzles[i].type = sel.value;
-      STAGES[selectedIdx].puzzles[i].data = {};
       await saveContent();
       rerender(selectedIdx);
     };
@@ -1070,7 +1076,7 @@ function handleHashChange(){
 
 function initFirebaseListeners(){
   db.ref("content").on("value", snap => {
-    if(snap.exists()){ STAGES = snap.val(); }
+    if(snap.exists()){ STAGES = normalizeAllStages(snap.val()); }
     else{ STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES)); db.ref("content").set(STAGES); }
     onDataChange();
   }, err => { console.error("Firebase read error:", err); });
