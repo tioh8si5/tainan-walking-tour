@@ -70,6 +70,13 @@ h1{ font-size: clamp(26px, 6vw, 32px); font-weight: 900; margin: 0 0 8px; letter
 .wrong-stamp{ width: 58px; height: 58px; flex-shrink: 0; border: 3px double var(--seal); border-radius: 50%; color: var(--seal); display:flex; align-items:center; justify-content:center; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 22px; font-weight: 700; transform: rotate(8deg); }
 .wrong-text{ font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--seal); line-height: 1.7; }
 .solved-answer{ font-family: 'Noto Sans TC', sans-serif; font-size: 14px; font-weight: 700; color: var(--ok); background: #E4EEE0; padding: 10px 14px; border-radius: 2px; margin-top: 4px; }
+.media-row{ display: flex; gap: 12px; border: 1px solid var(--line); border-radius: 2px; padding: 12px; margin-top: 10px; align-items: flex-start; }
+.media-thumb{ width: 72px; height: 72px; object-fit: cover; border-radius: 2px; border: 1px solid var(--line); flex-shrink: 0; }
+.media-info{ flex: 1; min-width: 0; }
+.media-name-input{ margin-bottom: 8px; }
+.media-row-actions{ display: flex; gap: 8px; }
+.media-save-btn{ padding: 7px 14px; background: var(--navy); color: var(--paper-light); font-family: 'Noto Sans TC', sans-serif; font-size: 12px; font-weight: 600; }
+.media-delete-btn{ padding: 7px 14px; background: none; color: var(--seal); border: 1px solid var(--seal); font-family: 'Noto Sans TC', sans-serif; font-size: 12px; }
 .fill-input{ width: 100%; font-family: 'Noto Sans TC', sans-serif; font-size: 15px; padding: 10px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 2px; margin-bottom: 10px; }
 .choice-list{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
 .choice-opt{ text-align: left; padding: 11px 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: 'Noto Sans TC', sans-serif; font-size: 13.5px; border-radius: 2px; }
@@ -112,7 +119,7 @@ button:hover{ opacity: 0.85; }
 .btn-primary{ width: 100%; padding: 13px; background: var(--navy); color: var(--paper-light); font-weight: 600; letter-spacing: 0.05em; }
 .btn-save{ padding: 12px 22px; background: var(--seal); color: var(--paper-light); font-weight: 700; letter-spacing: 0.05em; margin-top: 18px; }
 .tab-bar{ display: flex; gap: 8px; margin-bottom: 18px; }
-.tab-btn{ flex: 1; padding: 11px; background: var(--paper-dark); color: var(--ink-soft); font-family: 'Noto Sans TC', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; }
+.tab-btn{ flex: 1; padding: 10px 4px; background: var(--paper-dark); color: var(--ink-soft); font-family: 'Noto Sans TC', sans-serif; font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em; }
 .tab-btn.active{ background: var(--navy); color: var(--paper-light); }
 .stage-control{ display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font-family: 'Noto Sans TC', sans-serif; font-size: 14px; }
 .stage-control:last-child{ border-bottom: none; }
@@ -274,8 +281,26 @@ async function uploadImageFile(file, pathHint){
   const path = `images/${pathHint}-${Date.now()}-${safeName}`;
   const ref = storage.ref().child(path);
   const snap = await ref.put(file);
-  return await snap.ref.getDownloadURL();
+  const url = await snap.ref.getDownloadURL();
+  // 同步加入共用圖庫，方便之後在其他對話框／遊戲重複選用同一張圖
+  try{
+    const displayName = file.name.replace(/\.[^.]+$/, "") || safeName;
+    await db.ref("mediaLibrary").push({ name: displayName, url, path, uploadedAt: Date.now() });
+  }catch(e){ console.error("Media library save error:", e); }
+  return url;
 }
+async function renameMediaEntry(entryId, newName){
+  await db.ref("mediaLibrary/"+entryId+"/name").set(newName);
+}
+async function deleteMediaEntry(entryId){
+  const entry = mediaLibrary[entryId];
+  if(!entry) return;
+  try{
+    if(entry.path){ await storage.ref().child(entry.path).delete(); }
+  }catch(e){ console.error("Storage delete error (檔案可能已不存在):", e); }
+  await db.ref("mediaLibrary/"+entryId).set(null);
+}
+let mediaLibrary = {}; // { entryId: { name, url, path, uploadedAt } }
 
 let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
 let unlockedStages = {}; // { stageId: true }
@@ -742,6 +767,57 @@ function attachUnlockTabEvents(rerender){
   if(openAllBtn) openAllBtn.onclick = async () => { for(const s of STAGES){ await setStageUnlocked(s.id, true); } rerender(); };
 }
 
+/* ===================== Admin: media library tab ===================== */
+function mediaLibraryTabHTML(){
+  const entries = Object.entries(mediaLibrary||{}).sort((a,b)=> (b[1].uploadedAt||0) - (a[1].uploadedAt||0));
+  if(entries.length === 0){
+    return `<p class="small">圖庫目前是空的，先在任一對話框或遊戲的圖片欄位上傳一張照片，就會自動出現在這裡。</p>`;
+  }
+  const rows = entries.map(([id,item])=>`
+    <div class="media-row">
+      <img class="media-thumb" src="${esc(item.url)}" alt="">
+      <div class="media-info">
+        <input type="text" class="media-name-input" id="media-name-${id}" value="${esc(item.name)}" maxlength="150">
+        <div class="media-row-actions">
+          <button class="media-save-btn" data-media-save="${id}">儲存名稱</button>
+          <button class="media-delete-btn" data-media-delete="${id}">🗑 刪除</button>
+        </div>
+        <div class="img-status" id="media-status-${id}"></div>
+      </div>
+    </div>`).join("");
+  return `
+    <p class="small">共 ${entries.length} 張圖片。刪除前請確認沒有其他對話框或遊戲還在使用它，否則畫面會變成無法顯示的破圖，且此動作無法復原。</p>
+    ${rows}`;
+}
+function attachMediaLibraryTabEvents(rerender){
+  document.querySelectorAll("[data-media-save]").forEach(btn=>{
+    btn.onclick = async () => {
+      const id = btn.dataset.mediaSave;
+      const input = document.getElementById(`media-name-${id}`);
+      const statusEl = document.getElementById(`media-status-${id}`);
+      const newName = input.value.trim();
+      if(!newName){ statusEl.textContent = "名稱不能是空的"; statusEl.className = "img-status uploading"; return; }
+      try{
+        await renameMediaEntry(id, newName);
+        statusEl.textContent = "已更新名稱";
+        statusEl.className = "img-status";
+      }catch(e){
+        console.error(e);
+        statusEl.textContent = "更新失敗，請確認網路連線";
+        statusEl.className = "img-status uploading";
+      }
+    };
+  });
+  document.querySelectorAll("[data-media-delete]").forEach(btn=>{
+    btn.onclick = async () => {
+      const id = btn.dataset.mediaDelete;
+      if(!confirm("確定要刪除這張圖片嗎？如果還有對話框或遊戲正在使用它，畫面會變成無法顯示，此動作無法復原。")) return;
+      await deleteMediaEntry(id);
+      rerender();
+    };
+  });
+}
+
 /* ===================== Admin: content editor tab ===================== */
 function counterHTML(id, text){
   const len = (text||"").length;
@@ -765,9 +841,17 @@ const PUZZLE_TYPE_LABELS = { fill:"填字詞", choice:"選項", order:"點選排
 
 function imageUploadHTML(idPrefix, currentUrl){
   const has = currentUrl && currentUrl.trim() !== "";
+  const libEntries = Object.entries(mediaLibrary||{}).sort((a,b)=> (b[1].uploadedAt||0) - (a[1].uploadedAt||0));
+  const libOptions = libEntries.map(([id,item])=>`<option value="${esc(item.url)}" ${currentUrl===item.url?"selected":""}>${esc(item.name)}</option>`).join("");
   return `
     <div class="img-upload-row">
-      <div class="field-label">圖片（選填，直接上傳照片）</div>
+      <div class="field-label">圖片（選填）</div>
+      ${libEntries.length ? `
+      <select id="${idPrefix}-libselect">
+        <option value="">－從圖庫選擇（共 ${libEntries.length} 張）－</option>
+        ${libOptions}
+      </select>` : ""}
+      <div class="field-label" style="margin-top:8px;">或上傳新照片</div>
       <input type="file" accept="image/*" id="${idPrefix}-file">
       <div class="img-status" id="${idPrefix}-status"></div>
       <img class="img-preview" id="${idPrefix}-preview" src="${esc(currentUrl||"")}" style="${has?"":"display:none;"}">
@@ -782,6 +866,7 @@ function wireImageUpload(idPrefix, pathHint, onSaved){
   const previewEl = document.getElementById(`${idPrefix}-preview`);
   const urlInput = document.getElementById(`${idPrefix}-url`);
   const removeBtn = document.getElementById(`${idPrefix}-remove`);
+  const libSelect = document.getElementById(`${idPrefix}-libselect`);
   fileInput.onchange = async () => {
     const file = fileInput.files[0];
     if(!file) return;
@@ -793,6 +878,7 @@ function wireImageUpload(idPrefix, pathHint, onSaved){
       previewEl.src = url;
       previewEl.style.display = "block";
       removeBtn.style.display = "inline-block";
+      if(libSelect) libSelect.value = "";
       statusEl.textContent = "上傳完成";
       statusEl.className = "img-status";
       await onSaved(url);
@@ -802,12 +888,24 @@ function wireImageUpload(idPrefix, pathHint, onSaved){
       statusEl.className = "img-status uploading";
     }
   };
+  if(libSelect) libSelect.onchange = async () => {
+    const url = libSelect.value;
+    if(!url) return;
+    urlInput.value = url;
+    previewEl.src = url;
+    previewEl.style.display = "block";
+    removeBtn.style.display = "inline-block";
+    statusEl.textContent = "已從圖庫套用";
+    statusEl.className = "img-status";
+    await onSaved(url);
+  };
   if(removeBtn) removeBtn.onclick = async () => {
     urlInput.value = "";
     previewEl.src = "";
     previewEl.style.display = "none";
     removeBtn.style.display = "none";
     statusEl.textContent = "";
+    if(libSelect) libSelect.value = "";
     await onSaved("");
   };
 }
@@ -1135,7 +1233,7 @@ let adminSelectedStage = 0;
 
 async function renderAdminPanel(){
   if(adminSelectedStage >= STAGES.length) adminSelectedStage = STAGES.length-1;
-  const body = adminTab === "unlock" ? unlockTabHTML() : contentTabHTML(adminSelectedStage);
+  const body = adminTab === "unlock" ? unlockTabHTML() : (adminTab === "media" ? mediaLibraryTabHTML() : contentTabHTML(adminSelectedStage));
 
   document.getElementById("app").innerHTML = `
     <div class="admin-wrap">
@@ -1144,6 +1242,7 @@ async function renderAdminPanel(){
         <div class="tab-bar">
           <button class="tab-btn ${adminTab==='unlock'?'active':''}" id="tabUnlock">解鎖控制</button>
           <button class="tab-btn ${adminTab==='content'?'active':''}" id="tabContent">內容與謎題編輯</button>
+          <button class="tab-btn ${adminTab==='media'?'active':''}" id="tabMedia">圖庫管理</button>
         </div>
         <div id="tabBody">${body}</div>
       </div>
@@ -1152,9 +1251,11 @@ async function renderAdminPanel(){
 
   document.getElementById("tabUnlock").onclick = () => { adminTab="unlock"; renderAdminPanel(); };
   document.getElementById("tabContent").onclick = () => { adminTab="content"; renderAdminPanel(); };
+  document.getElementById("tabMedia").onclick = () => { adminTab="media"; renderAdminPanel(); };
   document.getElementById("logoutLink").onclick = (e) => { e.preventDefault(); sessionStorage.removeItem("tour-admin-auth"); window.location.hash=""; handleHashChange(); };
 
   if(adminTab === "unlock"){ attachUnlockTabEvents(()=>{ renderAdminPanel(); }); }
+  else if(adminTab === "media"){ attachMediaLibraryTabEvents(()=>{ renderAdminPanel(); }); }
   else{ attachContentTabEvents(adminSelectedStage, (i)=>{ adminSelectedStage=i; renderAdminPanel(); }); }
 }
 
@@ -1195,6 +1296,11 @@ function initFirebaseListeners(){
 
   db.ref("unlockedStages").on("value", snap => {
     unlockedStages = snap.exists() ? snap.val() : {};
+    onDataChange();
+  }, err => { console.error("Firebase read error:", err); });
+
+  db.ref("mediaLibrary").on("value", snap => {
+    mediaLibrary = snap.exists() ? snap.val() : {};
     onDataChange();
   }, err => { console.error("Firebase read error:", err); });
 }
