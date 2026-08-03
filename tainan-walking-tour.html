@@ -300,6 +300,42 @@ async function deleteMediaEntry(entryId){
   }catch(e){ console.error("Storage delete error (檔案可能已不存在):", e); }
   await db.ref("mediaLibrary/"+entryId).set(null);
 }
+/* 從 Firebase Storage 下載網址反推出儲存路徑，讓「掃描匯入」的圖片之後也能被正常刪除 */
+function extractStoragePathFromUrl(url){
+  try{
+    const match = String(url).match(/\/o\/([^?]+)/);
+    if(match){ return decodeURIComponent(match[1]); }
+  }catch(e){}
+  return null;
+}
+/* 掃描所有關卡目前正在使用的圖片網址（涵蓋舊版上傳、還沒登記進圖庫的圖片） */
+function scanUsedImageUrls(){
+  const found = [];
+  STAGES.forEach(s=>{
+    (s.blocks||[]).forEach((b,i)=>{
+      if(b.type === "dialogue" && b.imageUrl && b.imageUrl.trim()!==""){
+        found.push({ url: b.imageUrl, label: `${s.title||s.code}－對話${i+1}` });
+      }else if(b.type === "puzzle" && b.puzzle && b.puzzle.data && b.puzzle.data.imageUrl && b.puzzle.data.imageUrl.trim()!==""){
+        found.push({ url: b.puzzle.data.imageUrl, label: `${s.title||s.code}－遊戲${i+1}` });
+      }
+    });
+  });
+  return found;
+}
+async function importUsedImagesIntoLibrary(){
+  const found = scanUsedImageUrls();
+  const existingUrls = new Set(Object.values(mediaLibrary||{}).map(e=>e.url));
+  const seen = new Set();
+  let added = 0;
+  for(const item of found){
+    if(existingUrls.has(item.url) || seen.has(item.url)) continue;
+    seen.add(item.url);
+    const path = extractStoragePathFromUrl(item.url);
+    await db.ref("mediaLibrary").push({ name: item.label, url: item.url, path, uploadedAt: Date.now() });
+    added++;
+  }
+  return added;
+}
 let mediaLibrary = {}; // { entryId: { name, url, path, uploadedAt } }
 
 let STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES));
@@ -770,8 +806,14 @@ function attachUnlockTabEvents(rerender){
 /* ===================== Admin: media library tab ===================== */
 function mediaLibraryTabHTML(){
   const entries = Object.entries(mediaLibrary||{}).sort((a,b)=> (b[1].uploadedAt||0) - (a[1].uploadedAt||0));
+  const importRow = `
+    <div class="quick-row" style="margin-top:0;margin-bottom:14px;">
+      <button id="importUsedImagesBtn">🔄 掃描並匯入目前使用中的圖片</button>
+    </div>
+    <p class="small" style="margin-top:-8px;">如果之前上傳的圖片沒有出現在下面的下拉選單裡（例如在這個功能上線前上傳的），按這顆按鈕可以把它們找出來、補登記進圖庫。</p>
+    <div id="importStatus" class="img-status"></div>`;
   if(entries.length === 0){
-    return `<p class="small">圖庫目前是空的，先在任一對話框或遊戲的圖片欄位上傳一張照片，就會自動出現在這裡。</p>`;
+    return `${importRow}<p class="small">圖庫目前是空的，先在任一對話框或遊戲的圖片欄位上傳一張照片，或按上面的按鈕掃描既有圖片，就會出現在這裡。</p>`;
   }
   const rows = entries.map(([id,item])=>`
     <div class="media-row">
@@ -786,10 +828,21 @@ function mediaLibraryTabHTML(){
       </div>
     </div>`).join("");
   return `
+    ${importRow}
     <p class="small">共 ${entries.length} 張圖片。刪除前請確認沒有其他對話框或遊戲還在使用它，否則畫面會變成無法顯示的破圖，且此動作無法復原。</p>
     ${rows}`;
 }
 function attachMediaLibraryTabEvents(rerender){
+  const importBtn = document.getElementById("importUsedImagesBtn");
+  if(importBtn) importBtn.onclick = async () => {
+    const statusEl = document.getElementById("importStatus");
+    statusEl.textContent = "掃描中…";
+    statusEl.className = "img-status uploading";
+    const added = await importUsedImagesIntoLibrary();
+    statusEl.textContent = added > 0 ? `已找到並匯入 ${added} 張圖片` : "沒有找到新的圖片，圖庫已經是最新的";
+    statusEl.className = "img-status";
+    rerender();
+  };
   document.querySelectorAll("[data-media-save]").forEach(btn=>{
     btn.onclick = async () => {
       const id = btn.dataset.mediaSave;
