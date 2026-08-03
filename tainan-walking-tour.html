@@ -139,6 +139,9 @@ button:hover{ opacity: 0.85; }
 .block-card{ border: 1px dashed var(--line); padding: 12px; margin-top: 10px; border-radius: 2px; position: relative; }
 .block-card-head{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 6px; }
 .block-card-head .idx{ font-family:'Zen Kaku Gothic New', sans-serif; font-size: 11px; color: var(--brass); letter-spacing:0.08em; }
+.block-actions{ display: flex; gap: 6px; align-items: center; }
+.move-btn{ width: 28px; height: 28px; padding: 0; background: var(--paper-dark); color: var(--navy); font-size: 13px; font-weight: 700; border-radius: 2px; }
+.move-btn:disabled{ opacity: 0.3; cursor: not-allowed; }
 .remove-btn{ background: none; color: var(--seal); font-size: 12px; padding: 3px 8px; border: 1px solid var(--seal); }
 .add-block-btn{ margin-top: 10px; padding: 9px 16px; background: var(--paper-dark); color: var(--navy); font-size: 12.5px; font-weight: 600; }
 .add-row{ display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
@@ -1043,11 +1046,15 @@ function collectPuzzleDataFromForm(type, pIdx){
 
 function stageBlocksEditorHTML(stage){
   const blocks = stage.blocks||[];
+  const last = blocks.length-1;
+  const moveButtonsHTML = (i) => `
+      <button class="move-btn" data-move-up="${i}" ${i===0?"disabled":""}>↑</button>
+      <button class="move-btn" data-move-down="${i}" ${i===last?"disabled":""}>↓</button>`;
   const rendered = blocks.map((b,i)=>{
     if(b.type === "dialogue"){
       return `
     <div class="block-card">
-      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・對話</span><button class="remove-btn" data-remove-block="${i}">移除</button></div>
+      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・對話</span><span class="block-actions">${moveButtonsHTML(i)}<button class="remove-btn" data-remove-block="${i}">移除</button></span></div>
       <textarea maxlength="150" id="ed-block-${i}">${esc(b.text)}</textarea>
       ${counterHTML("ed-block-"+i+"-c", b.text)}
       ${imageUploadHTML("ed-block-"+i+"-img", b.imageUrl)}
@@ -1056,7 +1063,7 @@ function stageBlocksEditorHTML(stage){
     const pz = b.puzzle || { type:"fill", data:{} };
     return `
     <div class="block-card">
-      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・互動遊戲</span><button class="remove-btn" data-remove-block="${i}">移除</button></div>
+      <div class="block-card-head"><span class="idx">第 ${i+1} 頁・互動遊戲</span><span class="block-actions">${moveButtonsHTML(i)}<button class="remove-btn" data-remove-block="${i}">移除</button></span></div>
       <div class="field-label">遊戲類型</div>
       <select data-ptype="${i}">
         ${Object.keys(PUZZLE_TYPE_LABELS).map(t=>`<option value="${t}" ${pz.type===t?"selected":""}>${PUZZLE_TYPE_LABELS[t]}</option>`).join("")}
@@ -1065,7 +1072,7 @@ function stageBlocksEditorHTML(stage){
     </div>`;
   }).join("");
   return `
-    <div class="section-title">① 內容頁面（依新增順序顯示，對話與遊戲可自由交錯）</div>
+    <div class="section-title">① 內容頁面（可用↑↓調整順序，對話與遊戲可自由交錯）</div>
     ${rendered}
     <div class="add-row">
       <button class="add-block-btn" id="addDialogueBtn">＋ 新增一頁「對話」</button>
@@ -1222,6 +1229,28 @@ function attachContentTabEvents(selectedIdx, rerender){
       harvestFormIntoStage(selectedIdx);
       const i = parseInt(btn.dataset.removeBlock,10);
       STAGES[selectedIdx].blocks.splice(i,1);
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+  document.querySelectorAll("[data-move-up]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.moveUp,10);
+      if(i <= 0) return;
+      const blocks = STAGES[selectedIdx].blocks;
+      [blocks[i-1], blocks[i]] = [blocks[i], blocks[i-1]];
+      await saveContent();
+      rerender(selectedIdx);
+    };
+  });
+  document.querySelectorAll("[data-move-down]").forEach(btn=>{
+    btn.onclick = async () => {
+      harvestFormIntoStage(selectedIdx);
+      const i = parseInt(btn.dataset.moveDown,10);
+      const blocks = STAGES[selectedIdx].blocks;
+      if(i >= blocks.length-1) return;
+      [blocks[i], blocks[i+1]] = [blocks[i+1], blocks[i]];
       await saveContent();
       rerender(selectedIdx);
     };
