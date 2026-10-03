@@ -191,6 +191,7 @@ button:hover{ opacity: 0.85; }
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <div id="app"></div>
 
 <script>
@@ -257,7 +258,9 @@ const DEFAULT_STAGES = [
     completionTexts:["謝謝你走完這趟府城巡禮，希望這幾棟老建築，從此在你眼中有了不一樣的故事。"] }
 ];
 
-const ADMIN_PASSWORD = "1030";
+const ADMIN_UID = "788BnJ2EN8YGZfu26LHzaD1L5ur2";
+let authReady = false;
+function isAdmin(){ return authReady && firebase.auth().currentUser?.uid === ADMIN_UID; }
 const MAXLEN = 150;
 
 /* ⚠️ 請把下面這一整段換成你自己 Firebase 專案的設定值（步驟見說明文件） */
@@ -280,6 +283,7 @@ if(!FIREBASE_NOT_CONFIGURED){
 }
 
 async function uploadImageFile(file, pathHint){
+  if(!isAdmin()) throw new Error("請先使用管理員帳號登入");
   const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
   const path = `images/${pathHint}-${Date.now()}-${safeName}`;
   const ref = storage.ref().child(path);
@@ -761,17 +765,35 @@ function renderAdminLogin(errMsg){
     <div class="admin-wrap">
       <div class="admin-box">
         <h2>現場控制台</h2>
-        <p class="small">輸入密碼以管理解鎖進度與內容</p>
-        ${errMsg ? `<div class="err">${errMsg}</div>` : ""}
-        <input type="password" id="pwInput" placeholder="請輸入密碼">
+        <p class="small">使用管理員電子郵件與密碼登入</p>
+        ${errMsg ? `<div class="err">${esc(errMsg)}</div>` : ""}
+        <input type="text" id="emailInput" inputmode="email" autocomplete="username" placeholder="管理員電子郵件">
+        <input type="password" id="pwInput" autocomplete="current-password" placeholder="請輸入密碼">
         <button class="btn-primary" id="loginBtn">登入</button>
       </div>
       <div class="admin-link" style="margin-top:16px;"><a href="#">回到參加者畫面</a></div>
     </div>`;
-  document.getElementById("loginBtn").onclick = () => {
-    const val = document.getElementById("pwInput").value;
-    if(val === ADMIN_PASSWORD){ sessionStorage.setItem("tour-admin-auth","1"); handleHashChange(); }
-    else{ renderAdminLogin("密碼錯誤，請再試一次"); }
+  document.getElementById("loginBtn").onclick = async () => {
+    const button = document.getElementById("loginBtn");
+    const email = document.getElementById("emailInput").value.trim();
+    const password = document.getElementById("pwInput").value;
+    if(!email || !password){ renderAdminLogin("請輸入電子郵件與密碼"); return; }
+    button.disabled = true;
+    button.textContent = "登入中…";
+    try{
+      await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+      if(result.user.uid !== ADMIN_UID){
+        await firebase.auth().signOut();
+        renderAdminLogin("此帳號沒有管理權限");
+        return;
+      }
+      authReady = true;
+      handleHashChange();
+    }catch(e){
+      console.error("Login error:", e.code);
+      renderAdminLogin(e.code === "auth/operation-not-allowed" ? "請先在 Firebase 啟用電子郵件／密碼登入" : e.code === "auth/network-request-failed" ? "網路連線失敗，請稍後再試" : e.code === "auth/too-many-requests" ? "嘗試次數過多，請稍後再試" : "登入失敗，請確認電子郵件與密碼");
+    }
   };
   document.getElementById("pwInput").addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("loginBtn").click(); });
 }
@@ -940,7 +962,7 @@ function wireImageUpload(idPrefix, pathHint, onSaved){
       await onSaved(url);
     }catch(e){
       console.error("Upload error:", e);
-      statusEl.textContent = "上傳失敗，請確認 Firebase Storage 是否已開通";
+      statusEl.textContent = "上傳失敗，請確認管理員登入與 Storage 規則";
       statusEl.className = "img-status uploading";
     }
   };
@@ -1334,7 +1356,7 @@ async function renderAdminPanel(){
   document.getElementById("tabUnlock").onclick = () => { adminTab="unlock"; renderAdminPanel(); };
   document.getElementById("tabContent").onclick = () => { adminTab="content"; renderAdminPanel(); };
   document.getElementById("tabMedia").onclick = () => { adminTab="media"; renderAdminPanel(); };
-  document.getElementById("logoutLink").onclick = (e) => { e.preventDefault(); sessionStorage.removeItem("tour-admin-auth"); window.location.hash=""; handleHashChange(); };
+  document.getElementById("logoutLink").onclick = async (e) => { e.preventDefault(); await firebase.auth().signOut(); window.location.hash=""; handleHashChange(); };
 
   if(adminTab === "unlock"){ attachUnlockTabEvents(()=>{ renderAdminPanel(); }); }
   else if(adminTab === "media"){ attachMediaLibraryTabEvents(()=>{ renderAdminPanel(); }); }
@@ -1354,7 +1376,7 @@ function renderSetupNotice(){
 
 function onDataChange(){
   if(window.location.hash === "#admin"){
-    if(sessionStorage.getItem("tour-admin-auth") === "1"){ renderAdminPanel(); }
+    if(isAdmin()){ renderAdminPanel(); }
   }else{
     renderParticipant();
   }
@@ -1362,7 +1384,7 @@ function onDataChange(){
 
 function handleHashChange(){
   if(window.location.hash === "#admin"){
-    if(sessionStorage.getItem("tour-admin-auth") === "1"){ renderAdminPanel(); }
+    if(isAdmin()){ renderAdminPanel(); }
     else{ renderAdminLogin(null); }
   }else{
     renderParticipant();
@@ -1372,7 +1394,7 @@ function handleHashChange(){
 function initFirebaseListeners(){
   db.ref("content").on("value", snap => {
     if(snap.exists()){ STAGES = normalizeAllStages(snap.val()); }
-    else{ STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES)); db.ref("content").set(STAGES); }
+    else{ STAGES = JSON.parse(JSON.stringify(DEFAULT_STAGES)); }
     onDataChange();
   }, err => { console.error("Firebase read error:", err); });
 
@@ -1392,6 +1414,8 @@ window.addEventListener("hashchange", handleHashChange);
 if(FIREBASE_NOT_CONFIGURED){
   renderSetupNotice();
 }else{
+  sessionStorage.removeItem("tour-admin-auth");
+  firebase.auth().onAuthStateChanged(() => { authReady = true; handleHashChange(); });
   handleHashChange(); // 先用本地預設值畫一次，避免空白畫面
   initFirebaseListeners(); // 資料到位後會自動觸發重新渲染
 }
